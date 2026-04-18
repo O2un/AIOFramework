@@ -33,17 +33,13 @@ namespace O2un.Core
             _raw = raw;
         }
     
-        public UniqueKey(int index)
-        {
-            _raw = 0;
-            _group = 0;
-            _index = index;
-        }
-    
-        public bool Equals(UniqueKey other) => _raw == other._raw;
+        public bool Equals(UniqueKey other) => other != null && _raw == other._raw;
         public override bool Equals(object obj) => obj is UniqueKey other && Equals(other);
         public override int GetHashCode() => _raw.GetHashCode();
         public static implicit operator long(UniqueKey key) => key._raw;
         public static implicit operator UniqueKey(long raw) => new UniqueKey(raw);
+        
+        public static UniqueKey Undefined => new UniqueKey(0);
+        public bool IsDefined => Undefined.Equals(this);
     }
 }

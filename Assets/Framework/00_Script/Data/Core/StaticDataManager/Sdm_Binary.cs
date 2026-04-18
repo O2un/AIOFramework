@@ -10,9 +10,9 @@ namespace O2un.Data
 {
     public abstract partial class StaticDataManager<T> : IStaticDataManager where T : StaticData, new()
     {
+        [System.Diagnostics.Conditional("UNITY_EDITOR")]
         public void SaveToBinary()
         {
-#if UNITY_EDITOR
             var config = EditorHelper.GetOrCreateSettings<StaticDataConfig>(StaticDataConfig.GLOBALCONFIGPATH);
             using var bw = BinaryHelper.SaveToBinary(config.BINARYPATH + typeof(T).Name + config.BINARYSUFFIX);
             bw.Write(DataList.Count);
@@ -21,7 +21,6 @@ namespace O2un.Data
                 bw.Write(d.Key.Raw);
                 WriteToBinary(bw, d.Value);
             }
-#endif
         }
 
         protected abstract void WriteToBinary(BinaryWriter bw, T data);

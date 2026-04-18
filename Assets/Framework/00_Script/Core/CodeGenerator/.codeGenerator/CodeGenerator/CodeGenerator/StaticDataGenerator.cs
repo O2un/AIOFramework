@@ -73,17 +73,14 @@ namespace CodeGenerator
             sb.AppendLine("    {");
 
             // --- LoadFromExcel 로직 ---
-            sb.AppendLine("#if UNITY_EDITOR");
             sb.AppendLine("        protected override void ParseGeneratedData(List<Dictionary<string, string>> rawData)");
             sb.AppendLine("        {");
             sb.AppendLine($"            var tempDict = new Dictionary<UniqueKey, {classInfo.ClassName}>();");
             sb.AppendLine();
             sb.AppendLine("            foreach (var row in rawData)");
             sb.AppendLine("            {");
-            sb.AppendLine("                if (!row.TryGetValue(\"group\", out var groupStr) || !int.TryParse(groupStr, out int group)) continue;");
-            sb.AppendLine("                if (!row.TryGetValue(\"index\", out var indexStr) || !int.TryParse(indexStr, out int index)) continue;");
-            sb.AppendLine();
-            sb.AppendLine("                var key = new UniqueKey(group, index);");
+            sb.AppendLine("                var key = LoadKey(row);");
+            sb.AppendLine("                if(false == key.IsDefined) continue;");
             sb.AppendLine($"                var data = new {classInfo.ClassName}");
             sb.AppendLine("                {");
             sb.AppendLine("                    Key = key,");
@@ -101,7 +98,6 @@ namespace CodeGenerator
             sb.AppendLine("            }");
             sb.AppendLine("            DataList = tempDict.ToImmutableDictionary();");
             sb.AppendLine("        }");
-            sb.AppendLine("#endif");
             sb.AppendLine();
 
             // --- WriteToBinary 로직 ---
