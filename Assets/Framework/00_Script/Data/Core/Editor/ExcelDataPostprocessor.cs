@@ -120,15 +120,12 @@ $@"namespace O2un.Data
 {{
     public partial class {sheetName}StaticDataManager : StaticDataManager<{sheetName}StaticData>
     {{
-        //protected override void LoadFromExcel()
-        //{{
-        //}}
-        //protected override void SetXXX()
-        //{{
-        //}}
-        //protected override void LinkXXX()
-        //{{
-        //}}
+        protected override void SetProcess()
+        {{
+        }}
+        //protected override void LinkProcess()
+        {{
+        }}
     }}
 }}";
             File.WriteAllText(managerScriptPath, managerTemplate, Encoding.UTF8);
@@ -141,6 +138,7 @@ $@"namespace O2un.Data
         var sb = new StringBuilder();
         sb.AppendLine("namespace O2un.Data");
         sb.AppendLine("{");
+        sb.AppendLine("    [StaticData]");
         sb.AppendLine($"    public partial class {sheetName}StaticData");
         sb.AppendLine("    {");
 

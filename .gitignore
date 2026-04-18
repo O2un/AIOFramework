@@ -100,3 +100,6 @@ InitTestScene*.unity*
 
 /[Aa]ssets/Packages
 Assets/Framework/00_Script/Data/Generated
+.idea
+Assets/Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/CodeGenerator/bin
+Assets/Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/CodeGenerator/obj
