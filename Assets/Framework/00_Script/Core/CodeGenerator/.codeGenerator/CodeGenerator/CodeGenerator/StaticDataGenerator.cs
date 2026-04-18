@@ -16,15 +16,13 @@ namespace CodeGenerator
         {
             var classDeclarations = context.SyntaxProvider
                 .CreateSyntaxProvider(
-                    predicate: (s, _) =>
+                    predicate: GeneratorFilterHelper.IsClassWithAttribute,
+                    transform: (ctx, _) => 
                     {
-                        if (s is ClassDeclarationSyntax classSyntax)
-                        {
-                            return classSyntax.AttributeLists.Count > 0;
-                        }
-                        return false;
-                    },
-                    transform: (ctx, _) => GetSemanticTarget(ctx))
+                        // 헬퍼를 통해 [StaticData] 어트리뷰트가 있는 심볼만 안전하게 가져옴
+                        var symbol = GeneratorFilterHelper.GetClassWithAttribute(ctx, "StaticData");
+                        return symbol != null ? ExtractClassInfo(symbol) : null;
+                    })
                 .Where(m => m != null);
 
             context.RegisterSourceOutput(classDeclarations.Collect(), (spc, classes) =>
@@ -33,6 +31,7 @@ namespace CodeGenerator
 
                 foreach (var classInfo in classes)
                 {
+                    // partial 클래스 중복 생성 방지
                     if (processedClasses.Contains(classInfo.ClassName)) continue;
                     processedClasses.Add(classInfo.ClassName);
 
@@ -41,28 +40,11 @@ namespace CodeGenerator
             });
         }
 
-        private static ClassInfo GetSemanticTarget(GeneratorSyntaxContext context)
+        private static ClassInfo ExtractClassInfo(INamedTypeSymbol symbol)
         {
-            var classDeclaration = (ClassDeclarationSyntax)context.Node;
-            var symbol = context.SemanticModel.GetDeclaredSymbol(classDeclaration) as INamedTypeSymbol;
-
-            if (symbol == null) return null;
-            
-            bool hasStaticDataAttribute = false;
-            foreach (var attribute in symbol.GetAttributes())
-            {
-                // 이름이 StaticDataAttribute 이거나 StaticData 인 경우 통과
-                if (attribute.AttributeClass?.Name == "StaticDataAttribute" || attribute.AttributeClass?.Name == "StaticData")
-                {
-                    hasStaticDataAttribute = true;
-                    break;
-                }
-            }
-            if (!hasStaticDataAttribute) return null;
-
             var properties = new List<PropertyInfo>();
-            
             var members = symbol.GetMembers().OfType<IPropertySymbol>();
+
             foreach (var member in members)
             {
                 if (member.Name == "Key") continue;
@@ -75,7 +57,6 @@ namespace CodeGenerator
 
             return new ClassInfo(className, managerName, namespaceName, properties);
         }
-
         private static void Execute(SourceProductionContext context, ClassInfo classInfo)
         {
             var sb = new StringBuilder();

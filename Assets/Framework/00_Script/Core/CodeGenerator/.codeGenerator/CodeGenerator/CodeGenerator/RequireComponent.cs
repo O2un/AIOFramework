@@ -12,44 +12,13 @@ namespace CodeGenerator
         {
             var fieldDeclarations = context.SyntaxProvider
                 .CreateSyntaxProvider(
-                    predicate: (s, _) =>
-                    {
-                        if (s is FieldDeclarationSyntax fieldSyntax)
-                        {
-                            return fieldSyntax.AttributeLists.Count > 0;
-                        }
-
-                        return false;
-                    },
-                    transform: (ctx, _) => GetSemanticTargetForGeneration(ctx))
+                    predicate: GeneratorFilterHelper.IsFieldWithAttribute,
+                    transform: (ctx, _) => GeneratorFilterHelper.GetFieldWithAttribute(ctx, "RequireComponentField"))
                 .Where(m => m != null);
 
-            context.RegisterSourceOutput(fieldDeclarations, (spc, source) => Execute(spc, source));
+            context.RegisterSourceOutput(fieldDeclarations, (spc, symbol) => Execute(spc, symbol));
         }
-
-        private static IFieldSymbol GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
-        {
-            var fieldDeclaration = (FieldDeclarationSyntax)context.Node;
-            foreach (var variable in fieldDeclaration.Declaration.Variables)
-            {
-                var declaredSymbol = context.SemanticModel.GetDeclaredSymbol(variable);
-
-                if (declaredSymbol is IFieldSymbol fieldSymbol)
-                {
-                    foreach (var attributeData in fieldSymbol.GetAttributes())
-                    {
-                        if (attributeData.AttributeClass != null &&
-                            attributeData.AttributeClass.Name == "RequireComponentFieldAttribute")
-                        {
-                            return fieldSymbol;
-                        }
-                    }
-                }
-            }
-
-            return null;
-        }
-
+        
         private static void Execute(SourceProductionContext context, IFieldSymbol fieldSymbol)
         {
             var namespaceName = fieldSymbol.ContainingNamespace.ToDisplayString();
