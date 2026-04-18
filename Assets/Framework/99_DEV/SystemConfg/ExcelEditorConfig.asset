@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 646d6cc57606a0f4099bfa85fd149171, type: 3}
   m_Name: ExcelEditorConfig
   m_EditorClassIdentifier: Assembly-CSharp::ExcelEditorConfig
-  ExcelDirectory: Assets/Data/Excel
+  ExcelDirectory: Assets/Framework/30_Data/Excel
   GeneratedCsvDirectory: Assets/Data/GeneratedCsv
   MainScriptDirectory: Assets/Scripts/Data
