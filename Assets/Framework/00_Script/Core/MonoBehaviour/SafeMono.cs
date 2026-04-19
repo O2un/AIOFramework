@@ -163,7 +163,8 @@ namespace O2un
                 })
                 .AddTo(_disposableR3);
         }
-
+        
+        public delegate UniTask Task(CancellationToken ct);
         protected IDisposable StartAsync(Func<CancellationToken, UniTask> taskFunc)
         {
             var disposable = Observable.FromAsync(async ct =>
