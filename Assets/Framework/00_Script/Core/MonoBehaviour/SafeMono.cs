@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using R3;
+using Unity.Entities;
 using UnityEngine;
 
 namespace O2un
@@ -54,9 +55,15 @@ namespace O2un
             if (_isinit) return UniTask.CompletedTask;
             return _initCompletionSource.Task;
         }
-
+        
+        private bool _isRegistered = false;
         private void RegisterUpdate()
         {
+            #if UNITY_EDITOR
+            if (!Application.isPlaying) return;
+            #endif
+            if (_isRegistered) return;
+            
             if (this is ISafeUpdate updateable)
             {
                 var system = SystemProvider.GetSubsystem<GameUpdateSubSystem>();
@@ -74,10 +81,15 @@ namespace O2un
                 var system = SystemProvider.GetSubsystem<GameLateSubsystem>();
                 system?.Register(lu);
             }
+            _isRegistered = true;
         }
         private void UnregisterUpdate()
         {
             if (!_isinit) return;
+#if UNITY_EDITOR
+            if (!Application.isPlaying) return;
+#endif
+            if (!_isRegistered) return;
 
             if (this is ISafeUpdate updateable)
             {                
@@ -93,6 +105,7 @@ namespace O2un
             {                
                 SystemProvider.GetSubsystem<GameLateSubsystem>()?.Unregister(lu);
             }
+            _isRegistered = false;
         }
 
         private void OnEnable()
