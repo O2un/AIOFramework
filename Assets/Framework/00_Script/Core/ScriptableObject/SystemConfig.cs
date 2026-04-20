@@ -1,20 +1,62 @@
 using UnityEngine;
+using System.IO;
+using O2un.Core.Utils;
 
-public class SystemConfig<T> : ScriptableObject where T : SystemConfig<T>
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
+namespace O2un.Core
 {
-    public static string EDITORCONFIGPATH
+    public interface IEditorConfig { }
+    public interface IGlobalConfig { }
+    
+    public abstract class SystemConfig<T> : ScriptableObject where T : SystemConfig<T>
     {
-        get
+        protected static T GetOrCreateSettings(string path)
         {
-            return $"Assets/Framework/99_DEV/SystemConfg/{typeof(T).Name}.asset";
+    #if UNITY_EDITOR
+            T settings = AssetDatabase.LoadAssetAtPath<T>(path);
+            if (settings == null)
+            {
+                string directory = Path.GetDirectoryName(path);
+                if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
+    
+                settings = CreateInstance<T>();
+                AssetDatabase.CreateAsset(settings, path);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+            }
+            return settings;
+    #else
+            return null;
+    #endif
         }
     }
-
-    public static string GLOBALCONFIGPATH
+    
+    public abstract class EditorConfig<T> : SystemConfig<T>, IEditorConfig where T : EditorConfig<T>
     {
-        get
+        public static string PATH => $"Assets/Framework/99_DEV/SystemConfig/{typeof(T).Name}.asset";
+    
+        public static T GetConfig() => GetOrCreateSettings(PATH);
+    }
+    
+    public abstract class GlobalConfig<T> : SystemConfig<T>, IGlobalConfig where T : GlobalConfig<T>
+    {
+        public static string PATH => $"Assets/Resources/SystemConfig/{typeof(T).Name}.asset";
+        public static string RUNTIME_PATH => $"SystemConfig/{typeof(T).Name}";
+    
+        public static T GetConfig() => GetOrCreateSettings(PATH);
+    
+        public static T LoadRuntime()
         {
-            return $"Assets/Resources/SystemConfig/{typeof(T).Name}.asset";
+            T settings = Resources.Load<T>(RUNTIME_PATH);
+            if (settings == null)
+            {
+                Log.Print(Log.LogLevel.Error, $"런타임 설정 누락: {RUNTIME_PATH}");
+            }
+            return settings;
         }
     }
 }

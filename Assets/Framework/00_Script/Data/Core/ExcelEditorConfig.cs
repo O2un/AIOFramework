@@ -1,6 +1,5 @@
-using UnityEngine;
-
-public class ExcelEditorConfig : SystemConfig<ExcelEditorConfig>
+using O2un.Core;
+public class ExcelEditorConfig : EditorConfig<ExcelEditorConfig>
 {
     public string ExcelDirectory = "Assets/Framework/30_Data/Excel";
     public string GeneratedScriptDirectory = "Assets/Framework/00_Script/Data/Generated";

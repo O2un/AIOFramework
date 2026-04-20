@@ -7,10 +7,46 @@ using ExcelDataReader;
 using UnityEditor;
 using UnityEngine;
 
+[InitializeOnLoad]
 public class ExcelDataPostprocessor : AssetPostprocessor
 {
     private static ExcelEditorConfig _config;
-    public static ExcelEditorConfig Config => _config ??= EditorHelper.GetOrCreateSettings<ExcelEditorConfig>(ExcelEditorConfig.EDITORCONFIGPATH);
+    public static ExcelEditorConfig Config => _config ??= ExcelEditorConfig.GetConfig();
+
+    static ExcelDataPostprocessor()
+    {
+        EditorApplication.delayCall += CheckAllExcelFilesOnStartup;
+    }
+
+    private static void CheckAllExcelFilesOnStartup()
+    {
+        EditorApplication.delayCall -= CheckAllExcelFilesOnStartup;
+
+        if (SessionState.GetBool("ExcelDataPostprocessor_Initialized", false))
+            return;
+        SessionState.SetBool("ExcelDataPostprocessor_Initialized", true);
+
+        if (Config == null || string.IsNullOrEmpty(Config.ExcelDirectory)) return;
+
+        string fullPath = Path.GetFullPath(Config.ExcelDirectory);
+        if (!Directory.Exists(fullPath)) return;
+        
+        string[] excelFiles = Directory.GetFiles(fullPath, "*.xlsx", SearchOption.AllDirectories)
+            .Where(path => !path.Contains("~$"))
+            .ToArray();
+
+        if (excelFiles.Length == 0) return;
+
+        EnsureDirectoriesExist();
+
+        foreach (var file in excelFiles)
+        {
+            ProcessExcelFile(file);
+        }
+        
+        Debug.Log("[ExcelDataPostprocessor] 에디터 시작 중 엑셀 변경 사항을 감지하여 스크립트를 갱신했습니다.");
+        AssetDatabase.Refresh();
+    }
 
     private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
     {

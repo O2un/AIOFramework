@@ -1,10 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using O2un.Core;
 using O2un.Data.Binary;
-using UnityEngine;
 
 namespace O2un.Data 
 {
@@ -13,7 +11,7 @@ namespace O2un.Data
         [System.Diagnostics.Conditional("UNITY_EDITOR")]
         public void SaveToBinary()
         {
-            var config = EditorHelper.GetOrCreateSettings<StaticDataConfig>(StaticDataConfig.GLOBALCONFIGPATH);
+            var config = StaticDataConfig.GetConfig();
             using var bw = BinaryHelper.SaveToBinary(config.BINARYPATH + typeof(T).Name + config.BINARYSUFFIX);
             bw.Write(DataList.Count);
             foreach (var d in DataList)
@@ -28,7 +26,7 @@ namespace O2un.Data
 
         protected void LoadFromBinary()
         {
-            var config = Resources.Load<StaticDataConfig>(StaticDataConfig.GLOBALCONFIGPATH);
+            var config = StaticDataConfig.LoadRuntime();
 
             using var br = BinaryHelper.LoadFromBinary(config.BINARYPATH + typeof(T).Name + config.BINARYSUFFIX);
             LoadInternal(br);

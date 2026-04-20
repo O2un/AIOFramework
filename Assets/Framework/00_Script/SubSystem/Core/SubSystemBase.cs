@@ -9,14 +9,22 @@ namespace O2un
         public abstract void ClearAll();
         protected T GetSubsystem<T>() where T : SystemBase => SystemProvider.GetSubsystem<T>();
     }
-
-    // 1. Engine Subsystem (엔진 가동 시 가장 먼저 실행)
+    
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public abstract partial class EngineSubsystemBase : SubSystemBase { }
-
-    // 2. Game Subsystem (일반적인 게임 로직 그룹)
+    
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public abstract partial class GameSubsystemBase : SubSystemBase { }
+
+    public abstract partial class ServiceSubsystemBase : SubSystemBase
+    {
+        protected override void OnCreate()
+        {
+            base.OnCreate();
+            Enabled = false;
+        }
+        protected sealed override void OnUpdate() { }
+    }
 
     // 3. Edit Subsystem (에디터 모드 혹은 디버그 시에만 실행)
     #if UNITY_EDITOR

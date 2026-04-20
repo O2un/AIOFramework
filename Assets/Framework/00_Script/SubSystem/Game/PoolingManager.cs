@@ -6,7 +6,7 @@ using UnityEngine.AddressableAssets;
 
 namespace O2un.Pooling
 {
-    public partial class PoolingManager : GameSubsystemBase
+    public partial class PoolingManager : ServiceSubsystemBase
     {
         private readonly Dictionary<string, IObjectPool> _pools = new();
         private Transform _globalPoolRoot;
@@ -16,10 +16,7 @@ namespace O2un.Pooling
             Object.DontDestroyOnLoad(rootGo);
             _globalPoolRoot = rootGo.transform;
         }
-        protected override void OnUpdate()
-        {
-            // NULL
-        }
+        
         public override void ClearAll()
         {
             foreach(var pool in _pools)

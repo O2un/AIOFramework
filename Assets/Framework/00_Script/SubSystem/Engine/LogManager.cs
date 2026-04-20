@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace O2un.Core.Utils
 {
-    public partial class LogManager : EngineSubsystemBase
+    public partial class LogManager : ServiceSubsystemBase
     {
         protected override void Init()
         {
@@ -14,11 +14,6 @@ namespace O2un.Core.Utils
         public override void ClearAll()
         {
             
-        }
-
-        protected override void OnUpdate()
-        {
-            Log.UpdateFlush(SystemAPI.Time.DeltaTime);
         }
     }
 }
