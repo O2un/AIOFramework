@@ -172,6 +172,7 @@ $@"namespace O2un.Data
     {
         string generatedPath = Path.Combine(Config.GeneratedScriptDirectory, $"{sheetName}StaticData.g.cs");
         var sb = new StringBuilder();
+        sb.AppendLine("using O2un.Roslyn.Generator;");
         sb.AppendLine("namespace O2un.Data");
         sb.AppendLine("{");
         sb.AppendLine("    [StaticData]");

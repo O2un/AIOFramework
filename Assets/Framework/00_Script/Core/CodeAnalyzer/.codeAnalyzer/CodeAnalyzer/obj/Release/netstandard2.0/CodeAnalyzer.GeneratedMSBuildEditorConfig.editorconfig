@@ -1,0 +1,5 @@
+is_global = true
+build_property.RootNamespace = CodeAnalyzer
+build_property.ProjectDir = C:\Works\Ref\AIO\Assets\Framework\00_Script\Core\CodeAnalyzer\.codeAnalyzer\CodeAnalyzer\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 

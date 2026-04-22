@@ -1,27 +1,51 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using O2un.Core.Utils;
+using O2un.Roslyn.Analyzer;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using VContainer;
+using VContainer.Unity;
 
 namespace O2un.Pooling
 {
-    public partial class PoolingManager : ServiceSubsystemBase
+    public sealed class PoolingManager : EngineSubsystemBase
     {
         private readonly Dictionary<string, IObjectPool> _pools = new();
         private Transform _globalPoolRoot;
-        protected override void Init()
+
+        private readonly IObjectResolver _resolver;
+        [Inject]
+        public PoolingManager(IObjectResolver resolver)
+        {
+            _resolver = resolver;
+        }
+
+        protected override async UniTask InitAsync()
         {
             var rootGo = new GameObject("[Pool Manager Root]");
-            Object.DontDestroyOnLoad(rootGo);
+            Object.DontDestroyOnLoad(rootGo); // 싱글톤 스코프이므로 유지
             _globalPoolRoot = rootGo.transform;
+            
+            await UniTask.CompletedTask;
         }
-        
-        public override void ClearAll()
+
+        [CallSuper]
+        public override void Dispose()
         {
-            foreach(var pool in _pools)
+            ClearAll();
+
+            if (_globalPoolRoot != null)
             {
-                pool.Value.Dispose();
+                Object.Destroy(_globalPoolRoot.gameObject);
+            }
+        }
+
+        private void ClearAll()
+        {
+            foreach(var pool in _pools.Values)
+            {
+                pool.Dispose();
             }
             _pools.Clear();
         }
@@ -41,6 +65,9 @@ namespace O2un.Pooling
         {
             var pool = await GetOrCreatePool<T>(key);
             T instance = pool.Pop();
+
+            _resolver.InjectGameObject(instance.gameObject);
+
             await instance.InitFromPool(data);
             instance.ID = key;
 

@@ -1,19 +1,16 @@
+using Cysharp.Threading.Tasks;
 using Unity.Entities;
 using UnityEngine;
 
 namespace O2un.Core.Utils
 {
-    public partial class LogManager : ServiceSubsystemBase
+    public sealed class LogManager : EngineSubsystemBase
     {
-        protected override void Init()
+        protected override async UniTask InitAsync()
         {
             Log.Init();
             Log.Print(Log.LogLevel.Info, "LogManager Initialized");
-        }
-
-        public override void ClearAll()
-        {
-            
+            await UniTask.CompletedTask;
         }
     }
 }

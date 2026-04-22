@@ -2,17 +2,27 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using O2un.DI;
 using R3;
-using Unity.Entities;
 using UnityEngine;
 
 namespace O2un
 {
-    public abstract class SafeMono : MonoBehaviour
+    public abstract class SafeMono : MonoBehaviour, IAsyncReady
     {
-        private bool _isinit = false;
-        private bool _isInitializing = false;
-        private UniTaskCompletionSource _initCompletionSource;
+        public enum ReadyState
+        {
+            Created,
+            Initializing,
+            Ready,
+            Failed,
+            Disposed
+        }
+
+        private ReadyState _state = ReadyState.Created;
+        public ReadyState State => _state;
+        private UniTaskCompletionSource _readyCompletionSource;
+        public UniTaskCompletionSource ReadyCompletionSource => _readyCompletionSource ??= new();
 
 #region OBSOLETE_UNITY_EVENT
         [Obsolete("SafeMono에서는 Start()를 사용할 수 없습니다. Init() 또는 LinkDependency()를 오버라이드 하세요.", true)]
@@ -21,14 +31,8 @@ namespace O2un
 
         private void Awake()
         {
-            if(_isinit || _isInitializing)
-            {
-                return;
-            }
-
-            _isInitializing = true;
-            _initCompletionSource = new();
-
+            if(ReadyState.Created != _state) return;
+            _state = ReadyState.Initializing;
             _=InitPipelineAsync();
         }
         private async UniTaskVoid InitPipelineAsync()
@@ -36,84 +40,27 @@ namespace O2un
             try
             {
                 await Init();
-                _isinit = true;
-                _initCompletionSource.TrySetResult();
-                await LinkDependency();
-                
-                if(isActiveAndEnabled)
-                {   
-                    RegisterUpdate();
-                }
+                _state = ReadyState.Ready;
+                ReadyCompletionSource.TrySetResult();
             }
             catch (Exception e)
             {
-                _initCompletionSource.TrySetException(e);
+                _state = ReadyState.Failed;
+                ReadyCompletionSource.TrySetException(e);
+                gameObject.SetActive(false); // or Destroy
             }
         }
-        public UniTask EnsureInitializedAsync()
+
+        public UniTask WaitUntilReadyAsync()
         {
-            if (_isinit) return UniTask.CompletedTask;
-            return _initCompletionSource.Task;
+            if (_state == ReadyState.Ready) return UniTask.CompletedTask;
+            if (_state == ReadyState.Failed) return UniTask.FromException(new Exception($"[{gameObject.name}] 객체가 Failed 상태입니다."));
+
+            return ReadyCompletionSource.Task;
         }
         
-        private bool _isRegistered = false;
-        private void RegisterUpdate()
-        {
-            #if UNITY_EDITOR
-            if (!Application.isPlaying) return;
-            #endif
-            if (_isRegistered) return;
-            
-            if (this is ISafeUpdate updateable)
-            {
-                var system = SystemProvider.GetSubsystem<GameUpdateSubSystem>();
-                system?.Register(updateable);
-            }
-
-            if (this is ISafeFixedUpdate fu)
-            {
-                var system = SystemProvider.GetSubsystem<GameFixedSubsystem>();
-                system?.Register(fu);
-            }
-
-            if (this is ISafeLateUpdate lu)
-            {
-                var system = SystemProvider.GetSubsystem<GameLateSubsystem>();
-                system?.Register(lu);
-            }
-            _isRegistered = true;
-        }
-        private void UnregisterUpdate()
-        {
-            if (!_isinit) return;
-#if UNITY_EDITOR
-            if (!Application.isPlaying) return;
-#endif
-            if (!_isRegistered) return;
-
-            if (this is ISafeUpdate updateable)
-            {                
-                SystemProvider.GetSubsystem<GameUpdateSubSystem>()?.Unregister(updateable);
-            }
-
-            if (this is ISafeFixedUpdate fu)
-            {                
-                SystemProvider.GetSubsystem<GameFixedSubsystem>()?.Unregister(fu);
-            }
-
-            if (this is ISafeLateUpdate lu)
-            {                
-                SystemProvider.GetSubsystem<GameLateSubsystem>()?.Unregister(lu);
-            }
-            _isRegistered = false;
-        }
-
         private void OnEnable()
         {
-            if(_isinit)
-            {
-                RegisterUpdate();
-            }
             SafeEnable();
         }
         protected virtual void SafeEnable()
@@ -122,7 +69,6 @@ namespace O2un
         }
         private void OnDisable()
         {
-            UnregisterUpdate();
             _disposableR3.Clear();
             SafeDisable();
         }
@@ -133,11 +79,7 @@ namespace O2un
         }
         private void OnDestroy()
         {
-            if (_isinit && gameObject.activeInHierarchy) 
-            {
-                UnregisterUpdate();
-            }
-
+            _state = ReadyState.Disposed;
             _disposableR3.Dispose();
             SafeDestroy();
         }
@@ -151,14 +93,6 @@ namespace O2un
         /// </summary>
         /// <returns></returns>
         protected async virtual UniTask Init()
-        {
-            await UniTask.CompletedTask;
-        }
-        /// <summary>
-        /// Handle object linking and dependency setup within this function.
-        /// </summary>
-        /// <returns></returns>
-        protected async virtual UniTask LinkDependency()
         {
             await UniTask.CompletedTask;
         }

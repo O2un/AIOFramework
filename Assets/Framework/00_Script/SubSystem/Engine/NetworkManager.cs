@@ -11,7 +11,7 @@ namespace O2un.Core.Network
         public T Data { get; set; }
     }
 
-    public partial class NetworkManager : ServiceSubsystemBase
+    public sealed class NetworkManager : EngineSubsystemBase
     {
         private NetworkSystemConfig _config;
         private NetworkClient _client;
@@ -20,7 +20,7 @@ namespace O2un.Core.Network
 
         public bool IsConnected => _client != null && _client.IsConnected;
 
-        protected override void Init()
+        protected override async UniTask InitAsync()
         {
             _config = NetworkSystemConfig.LoadRuntime();
         
@@ -29,10 +29,10 @@ namespace O2un.Core.Network
             
             _client = new(_config);
             _client.OnRawMessageReceived += ProcessIncomingRawData;
-            _=_client.ConnectAsync();
+            await _client.ConnectAsync();
         }
 
-        public override void ClearAll()
+        public override void Dispose()
         {
             _client?.Dispose();
             _router?.Clear();

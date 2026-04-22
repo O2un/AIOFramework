@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using O2un.Roslyn.Generator;
 using UnityEngine;
 
 namespace O2un
@@ -28,7 +29,7 @@ namespace O2un
         
         public async UniTask TurnOnAsync()
         {
-            await EnsureInitializedAsync();
+            await WaitUntilReadyAsync();
 
             if(IsVisible)
             {
@@ -47,7 +48,7 @@ namespace O2un
 
         public async UniTask TurnOffAsync()
         {
-            await EnsureInitializedAsync();
+            await WaitUntilReadyAsync();
 
             if (false == IsVisible)
             {

@@ -1,34 +1,40 @@
-using Unity.Entities;
+using System;
+using Cysharp.Threading.Tasks;
+using O2un.Core.Utils;
+using O2un.DI;
 
 namespace O2un
 {
-    public abstract partial class SubSystemBase : SystemBase
+    public abstract partial class SubSystemBase : IAsyncReady, IDisposable
     {
-        protected override void OnCreate() => Init();
-        protected abstract void Init();
-        public abstract void ClearAll();
-        protected T GetSubsystem<T>() where T : SystemBase => SystemProvider.GetSubsystem<T>();
-    }
-    
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
-    public abstract partial class EngineSubsystemBase : SubSystemBase { }
-    
-    [UpdateInGroup(typeof(SimulationSystemGroup))]
-    public abstract partial class GameSubsystemBase : SubSystemBase { }
-
-    public abstract partial class ServiceSubsystemBase : SubSystemBase
-    {
-        protected override void OnCreate()
+        private readonly UniTaskCompletionSource _readySource = new();
+        protected SubSystemBase()
         {
-            base.OnCreate();
-            Enabled = false;
+            _ = InternalInitAsync();
         }
-        protected sealed override void OnUpdate() { }
+        private async UniTaskVoid InternalInitAsync()
+        {
+            try
+            {
+                await InitAsync();
+                _readySource.TrySetResult();
+            }
+            catch(Exception e)
+            {
+                _readySource.TrySetException(e);
+                Log.Print(Log.LogLevel.Fatal, $"[{GetType().Name}] Init Failed: {e.Message}");
+            }
+        }
+        protected abstract UniTask InitAsync();
+        public virtual void Dispose()
+        {
+        }
+        public UniTask WaitUntilReadyAsync() => _readySource.Task;
     }
-
-    // 3. Edit Subsystem (에디터 모드 혹은 디버그 시에만 실행)
+    
+    public abstract partial class EngineSubsystemBase : SubSystemBase { }
+    public abstract partial class GameSubsystemBase : SubSystemBase { }
     #if UNITY_EDITOR
-    [UpdateInGroup(typeof(PresentationSystemGroup))]
     public abstract partial class EditSubsystemBase : SubSystemBase { }
     #endif
 }
