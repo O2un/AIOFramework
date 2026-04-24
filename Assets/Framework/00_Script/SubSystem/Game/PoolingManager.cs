@@ -30,8 +30,8 @@ namespace O2un.Pooling
             await UniTask.CompletedTask;
         }
 
-        [CallSuper]
-        public override void Dispose()
+        [CallBase]
+        protected override void SafeDispose()
         {
             ClearAll();
 

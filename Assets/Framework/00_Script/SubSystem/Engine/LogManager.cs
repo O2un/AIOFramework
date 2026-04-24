@@ -12,5 +12,10 @@ namespace O2un.Core.Utils
             Log.Print(Log.LogLevel.Info, "LogManager Initialized");
             await UniTask.CompletedTask;
         }
+
+        protected override void SafeDispose()
+        {
+            // NULL
+        }
     }
 }

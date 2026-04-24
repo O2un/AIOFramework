@@ -17,14 +17,14 @@ namespace O2un.UI
         public override async UniTask InitAsync()
         {
             Progress = _source.Progress
-            .AddTo(_disposable);
+            .AddTo(_disposableR3);
 
             await UniTask.CompletedTask;
         }
 
-        public override void Dispose()
+        protected override void SafeDispose()
         {
-            base.Dispose();
+            
         }
     }
 }

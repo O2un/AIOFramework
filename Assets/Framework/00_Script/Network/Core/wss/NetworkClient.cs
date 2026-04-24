@@ -5,15 +5,12 @@ using O2un.Utils;
 
 namespace O2un.Core.Network
 {
-    public sealed class NetworkClient : IDisposable
+    public sealed class NetworkClient : SafeDisposableClass
     {
         private readonly NetworkSystemConfig _config;
         private WebSocketClient _webSocket;
-        private CancellationTokenSource _cts;
         
-        private bool _isDisposed;
         private bool _isReconnecting;
-
         public bool IsConnected => _webSocket != null && _webSocket.IsConnected;
 
         public event Action OnConnected;
@@ -25,15 +22,15 @@ namespace O2un.Core.Network
             _config = config;
         }
         
-        public async UniTask ConnectAsync()
+        public async UniTask TryConnect()
         {
             if (IsConnected || _isReconnecting) return;
 
-            _cts?.Cancel();
-            _cts?.Dispose();
-            _cts = new CancellationTokenSource();
-
-            await ConnectInternalAsync(_cts.Token);
+            var handle = this.StartExclusiveAsync("TryConnection", async ct =>
+            { 
+                await ConnectInternalAsync(ct);
+            });
+            await handle;
         }
 
         private async UniTask ConnectInternalAsync(CancellationToken ct)
@@ -60,39 +57,36 @@ namespace O2un.Core.Network
             OnConnected?.RunOnMainThread();
         }
 
-        private void HandleDisconnected(string reason)
-        {
-            TriggerReconnect();
-        }
-
-        private void HandleError(string error)
-        {
-            TriggerReconnect();
-        }
+        private void HandleDisconnected(string reason) => TriggerReconnect();
+        private void HandleError(string error) => TriggerReconnect();
 
         private void TriggerReconnect()
         {
             OnDisconnected.RunOnMainThread();
-            _=ReconnectWithBackoffAsync();
+            this.StartExclusiveAsync("ReconnectLoop", async ct => 
+            {
+                await ReconnectWithBackoffAsync(ct);
+            });
         }
 
-        private async UniTask ReconnectWithBackoffAsync()
+        private async UniTask ReconnectWithBackoffAsync(CancellationToken ct)
         {
-            if (_isDisposed || _isReconnecting) return;
+            if (IsDisposed || _isReconnecting) return;
             _isReconnecting = true;
 
             int attempt = 0;
             int maxDelay = 15000;
 
-            while (!_isDisposed && !IsConnected)
+            while (!IsDisposed && !IsConnected)
             {
                 attempt++;
                 int delay = Math.Min((int)Math.Pow(2, attempt) * 1000, maxDelay);
                 
                 try
                 {
-                    await UniTask.Delay(delay, cancellationToken: _cts.Token);
-                    await ConnectInternalAsync(_cts.Token);
+                    await UniTask.Delay(delay, cancellationToken: ct);
+                    if (ct.IsCancellationRequested) break;
+                    await ConnectInternalAsync(ct);
                 }
                 catch (OperationCanceledException)
                 {
@@ -109,11 +103,8 @@ namespace O2un.Core.Network
             }
         }
 
-        public void Dispose()
+        protected override void SafeDispose()
         {
-            _isDisposed = true;
-            _cts?.Cancel();
-            _cts?.Dispose();
             _webSocket?.Dispose();
         }
     }

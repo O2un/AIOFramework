@@ -29,10 +29,10 @@ namespace O2un.Core.Network
             
             _client = new(_config);
             _client.OnRawMessageReceived += ProcessIncomingRawData;
-            await _client.ConnectAsync();
+            await _client.TryConnect();
         }
 
-        public override void Dispose()
+        protected override void SafeDispose()
         {
             _client?.Dispose();
             _router?.Clear();

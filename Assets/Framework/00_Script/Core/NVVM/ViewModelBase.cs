@@ -1,14 +1,14 @@
 using System;
 using Cysharp.Threading.Tasks;
+using O2un.Core;
 using O2un.DI;
 using O2un.Roslyn.Analyzer;
 using R3;
 
 namespace O2un.NVVM
 {
-    public abstract class ViewModelBase : IDisposable, IAsyncReady
+    public abstract class ViewModelBase : SafeDisposableClass, IAsyncReady
     {
-        protected readonly CompositeDisposable _disposable = new();
         private readonly UniTaskCompletionSource _readySource = new();
 
         public void TryInit()
@@ -31,11 +31,5 @@ namespace O2un.NVVM
 
         public virtual UniTask InitAsync() => UniTask.CompletedTask;
         public UniTask WaitUntilReadyAsync() => _readySource.Task;
-
-        [CallSuper]
-        public virtual void Dispose()
-        {
-            _disposable.Dispose();
-        }
     }
 }

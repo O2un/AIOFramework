@@ -4,16 +4,17 @@ using System.Net.WebSockets;
 using System.Text.Json;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using O2un.Core.Utils;
+using O2un.Utils;
 
 namespace O2un.Core.Network
 {
-    public sealed class WebSocketClient : IDisposable
+    public sealed class WebSocketClient : SafeDisposableClass
     {
         private ClientWebSocket _webSocket;
         private readonly byte[] _receiveBuffer;
         private readonly Memory<byte> _receiveMemory;
-        private CancellationTokenSource _receiveCts;
+        
+        private AsyncHandle _receiveHandle;
 
         public event Action OnConnected;
         public event Action<string> OnDisconnected;
@@ -35,13 +36,16 @@ namespace O2un.Core.Network
             if (IsConnected) return;
 
             _webSocket = new ClientWebSocket();
-            _receiveCts = new CancellationTokenSource();
 
             try
             {
                 await _webSocket.ConnectAsync(new Uri(uri), ct);
                 OnConnected?.Invoke();
-                ReceiveLoopAsync(_receiveCts.Token).Forget();
+                
+                _receiveHandle = this.StartAsync(async innerCt => 
+                {
+                    await ReceiveLoopAsync(innerCt);
+                });
             }
             catch (Exception ex)
             {
@@ -55,7 +59,7 @@ namespace O2un.Core.Network
 
             try
             {
-                _receiveCts?.Cancel();
+                _receiveHandle.Dispose();
                 if (_webSocket.State == WebSocketState.Open)
                 {
                     await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
@@ -114,7 +118,7 @@ namespace O2un.Core.Network
             await _webSocket.SendAsync(data, messageType, true, CancellationToken.None);
         }
 
-        private async UniTaskVoid ReceiveLoopAsync(CancellationToken ct)
+        private async UniTask ReceiveLoopAsync(CancellationToken ct)
         {
             try
             {
@@ -194,10 +198,8 @@ namespace O2un.Core.Network
             }
         }
 
-        public void Dispose()
+        protected override void SafeDispose()
         {
-            _receiveCts?.Cancel();
-            _receiveCts?.Dispose();
             _webSocket?.Dispose();
             _eventHandlers.Clear();
         }

@@ -1,5 +1,7 @@
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using O2un.Roslyn.Generator;
+using O2un.Utils;
 using UnityEngine;
 
 namespace O2un
@@ -10,9 +12,10 @@ namespace O2un
 
         [SerializeField] private bool _isVisibleOnInit = false;
         public bool IsVisible { get; private set; } = false;
-        protected override async UniTask Init()
+        private const string TRANSITION_KEY = "UI_Transition";
+        protected override async UniTask Init(CancellationToken ct)
         {
-            await base.Init();
+            await base.Init(ct);
             SetVisibleState(_isVisibleOnInit);
         }
 
@@ -35,13 +38,22 @@ namespace O2un
             {
                 return;
             }
+            IsVisible = true;
 
-            SetVisibleState(true);
+            if (CanvasGroup != null)
+            {
+                CanvasGroup.blocksRaycasts = true;
+                CanvasGroup.interactable = false;
+            }
 
-            await TurnOnAnim();
+            await this.StartExclusiveAsync(TRANSITION_KEY, async ct => 
+            {
+                await TurnOnAnim(ct);
+                SetVisibleState(true);
+            });
         }
 
-        protected virtual async UniTask TurnOnAnim()
+        protected virtual async UniTask TurnOnAnim(CancellationToken ct)
         {
             await UniTask.CompletedTask;
         }
@@ -61,12 +73,14 @@ namespace O2un
                 CanvasGroup.blocksRaycasts = false;
             }
 
-            await TurnOffAnim();
-
-            SetVisibleState(false);
+            await this.StartExclusiveAsync(TRANSITION_KEY, async ct => 
+            {
+                await TurnOffAnim(ct);
+                SetVisibleState(false);
+            });
         }
 
-        protected virtual async UniTask TurnOffAnim()
+        protected virtual async UniTask TurnOffAnim(CancellationToken ct)
         {
             await UniTask.CompletedTask;
         }

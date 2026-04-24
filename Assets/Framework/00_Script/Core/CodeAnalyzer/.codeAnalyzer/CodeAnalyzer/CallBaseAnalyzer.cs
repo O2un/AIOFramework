@@ -9,7 +9,7 @@ using System.Linq;
 namespace CodeAnalyzer
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public class CallSuperAnalyzer : DiagnosticAnalyzer
+    public class CallBaseAnalyzer : DiagnosticAnalyzer
     {
         public static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(
             id: "MY0001",
@@ -34,8 +34,8 @@ namespace CodeAnalyzer
             if (methodSymbol == null || !methodSymbol.IsOverride) return;
 
             var baseMethod = methodSymbol.OverriddenMethod;
-            var hasCallSuper = baseMethod.GetAttributes().Any(ad => ad.AttributeClass.Name == "CallSuperAttribute");
-            if (!hasCallSuper) return;
+            var hasCallBase = baseMethod.GetAttributes().Any(ad => ad.AttributeClass.Name == "CallBaseAttribute");
+            if (!hasCallBase) return;
 
             bool callsBase = CheckIfBaseCalled(methodSyntax, methodSymbol.Name);
 

@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using O2un.Core;
 using O2un.DI;
 using R3;
 using UnityEngine;
 
 namespace O2un
 {
-    public abstract class SafeMono : MonoBehaviour, IAsyncReady
+    public abstract class SafeMono : MonoBehaviour, IAsyncReady, ISafeDisposable
     {
         public enum ReadyState
         {
@@ -39,9 +40,17 @@ namespace O2un
         {
             try
             {
-                await Init();
+                // 초기화 작업은 객체가 Disable되더라도 계속 돌아야 하기때문에 DisposableR3에 종속된 토큰이 아닌 객체 파괴 토큰을 사용한다
+                var ct = this.GetCancellationTokenOnDestroy();
+                await Init(ct);
+                if (_state == ReadyState.Disposed) return;
                 _state = ReadyState.Ready;
                 ReadyCompletionSource.TrySetResult();
+            }
+            catch (OperationCanceledException)
+            {
+                _state = ReadyState.Disposed;
+                ReadyCompletionSource.TrySetCanceled();
             }
             catch (Exception e)
             {
@@ -55,6 +64,7 @@ namespace O2un
         {
             if (_state == ReadyState.Ready) return UniTask.CompletedTask;
             if (_state == ReadyState.Failed) return UniTask.FromException(new Exception($"[{gameObject.name}] 객체가 Failed 상태입니다."));
+            if (_state == ReadyState.Disposed) return UniTask.FromCanceled();
 
             return ReadyCompletionSource.Task;
         }
@@ -79,9 +89,7 @@ namespace O2un
         }
         private void OnDestroy()
         {
-            _state = ReadyState.Disposed;
-            _disposableR3.Dispose();
-            SafeDestroy();
+            Dispose();
         }
         protected virtual void SafeDestroy()
         {
@@ -92,69 +100,29 @@ namespace O2un
         /// Limit this function to self-initialization and resource loading only.
         /// </summary>
         /// <returns></returns>
-        protected async virtual UniTask Init()
+        protected async virtual UniTask Init(CancellationToken ct)
         {
             await UniTask.CompletedTask;
         }
 
-        #region ASYNC_HELPER
-        protected readonly CompositeDisposable _disposableR3 = new();
-        protected void DelayCall(float second, Action action, bool ignoreTimeScale = false , UnityTimeProvider timing = null)
+        public void Dispose()
         {
-            var timeProvider = timing ?? UnityTimeProvider.Update;
-            var selectedProvider = ignoreTimeScale ? TimeProvider.System : timeProvider;
-            Observable.Timer(TimeSpan.FromSeconds(second), selectedProvider)
-                .Subscribe(_ => 
-                {
-                    action();
-                })
-                .AddTo(_disposableR3);
-        }
-        
-        public delegate UniTask Task(CancellationToken ct);
-        protected IDisposable StartAsync(Func<CancellationToken, UniTask> taskFunc)
-        {
-            var disposable = Observable.FromAsync(async ct =>
-            {
-                try
-                {
-                    await taskFunc(ct);
-                }
-                catch (OperationCanceledException) {}
-            }).Subscribe();
-            disposable.AddTo(_disposableR3);
-            return disposable;
-        }
-
-        private readonly Dictionary<string, SerialDisposable> _exclusiveTasks = new();
-        protected void StartExclusiveAsync(string key, Func<CancellationToken, UniTask> taskFunc)
-        {
-            //RuntimeAuditor.AssertStringIsLiteral(key);
-
-            if (!_exclusiveTasks.TryGetValue(key, out var serialHandler))
-            {
-                serialHandler = new SerialDisposable();
-                serialHandler.AddTo(_disposableR3);
-                _exclusiveTasks.Add(key, serialHandler);
-            }
+            if (_disposed) return;
+            _disposed = true;
+            _state = ReadyState.Disposed;
+            _disposableR3.Dispose();
+            _exclusiveTasks.Clear();
             
-            serialHandler.Disposable = Observable.FromAsync(async ct =>
-            {
-                try
-                {
-                    await taskFunc(ct);
-                }
-                catch (OperationCanceledException){}
-            }).Subscribe();
+            SafeDestroy();
         }
 
-        protected void CancelExclusiveAsync(string key)
-        {
-            if (_exclusiveTasks.TryGetValue(key, out var serialHandler))
-            {
-                serialHandler.Disposable = null; 
-            }
-        }
+        #region ASYNC_HELPER
+        private bool _disposed = false;
+        public bool IsDisposed => _disposed;
+        protected readonly CompositeDisposable _disposableR3 = new();
+        public CompositeDisposable DisposableR3 => _disposableR3;
+        private readonly Dictionary<string, SerialDisposable> _exclusiveTasks = new();
+        public Dictionary<string, SerialDisposable> ExclusiveTasks => _exclusiveTasks;
         #endregion
     }
 }

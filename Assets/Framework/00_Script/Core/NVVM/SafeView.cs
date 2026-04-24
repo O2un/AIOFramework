@@ -1,7 +1,7 @@
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using O2un.Roslyn.Analyzer;
-using UnityEngine;
 using VContainer;
 
 namespace O2un.NVVM
@@ -17,9 +17,9 @@ namespace O2un.NVVM
             Model.TryInit();
         }
 
-        protected override async UniTask Init()
+        protected override async UniTask Init(CancellationToken ct)
         {
-            await base.Init();
+            await base.Init(ct);
 
             if(null != Model)
             {
@@ -34,7 +34,7 @@ namespace O2un.NVVM
 
         protected abstract void BindModel();
 
-        [CallSuper]
+        [CallBase]
         protected override void SafeDestroy()
         {
             base.SafeDestroy();

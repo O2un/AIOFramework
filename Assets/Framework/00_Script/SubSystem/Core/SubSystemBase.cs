@@ -1,11 +1,12 @@
 using System;
 using Cysharp.Threading.Tasks;
+using O2un.Core;
 using O2un.Core.Utils;
 using O2un.DI;
 
 namespace O2un
 {
-    public abstract partial class SubSystemBase : IAsyncReady, IDisposable
+    public abstract partial class SubSystemBase : SafeDisposableClass, IAsyncReady
     {
         private readonly UniTaskCompletionSource _readySource = new();
         protected SubSystemBase()
@@ -26,9 +27,6 @@ namespace O2un
             }
         }
         protected abstract UniTask InitAsync();
-        public virtual void Dispose()
-        {
-        }
         public UniTask WaitUntilReadyAsync() => _readySource.Task;
     }
     
