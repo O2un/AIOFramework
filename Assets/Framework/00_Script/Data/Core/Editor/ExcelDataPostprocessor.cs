@@ -175,7 +175,7 @@ $@"namespace O2un.Data
         sb.AppendLine("using O2un.Roslyn.Generator;");
         sb.AppendLine("namespace O2un.Data");
         sb.AppendLine("{");
-        sb.AppendLine("    [StaticData]");
+        sb.AppendLine("    [O2un.Roslyn.Generator.StaticData]");
         sb.AppendLine($"    public partial class {sheetName}StaticData");
         sb.AppendLine("    {");
 

@@ -106,3 +106,5 @@ Assets/Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/CodeG
 Assets/3RD/
 Assets/Framework/00_Script/Core/CodeAnalyzer/.codeAnalyzer/CodeAnalyzer/bin/
 Assets/Framework/00_Script/Core/CodeAnalyzer/.codeAnalyzer/CodeAnalyzer/obj/
+Assets/Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/obj
+Assets/Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/bin
