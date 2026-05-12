@@ -37,6 +37,69 @@ namespace O2un.Core.Utils
         }
     
         private static readonly Dictionary<string, CacheData> _handleCache = new();
+
+        public static async UniTask PreloadLabelAndCacheAsync<T>(string label) where T : Object
+        {
+            if (string.IsNullOrEmpty(label))
+            {
+                Log.Print(Log.LogLevel.Error,"[AddressablesUtils] Label이 비어있습니다.");
+                return;
+            }
+
+            var locationHandle = Addressables.LoadResourceLocationsAsync(label, typeof(T));
+            await locationHandle.Task;
+
+            var locations = locationHandle.Result;
+
+            if (locations == null || locations.Count == 0)
+            {
+                Log.Print(Log.LogLevel.Warning,$"[AddressablesUtils] Label에 해당하는 리소스가 없습니다. label={label}");
+                Addressables.Release(locationHandle);
+                return;
+            }
+
+            for (int i = 0; i < locations.Count; i++)
+            {
+                var location = locations[i];
+                var key = location.PrimaryKey;
+
+                if (string.IsNullOrEmpty(key))
+                {
+                    Log.Print(Log.LogLevel.Warning,$"[AddressablesUtils] Location PrimaryKey가 비어있습니다. label={label}, internalId={location.InternalId}");
+                    continue;
+                }
+
+                if (_handleCache.TryGetValue(key, out var cached))
+                {
+                    if (cached.IsDone)
+                        cached.RefCount++;
+
+                    continue;
+                }
+
+                var handle = Addressables.LoadAssetAsync<T>(location);
+
+                var cache = new CacheData
+                {
+                    _handle = handle,
+                    RefCount = 1
+                };
+
+                _handleCache.Add(key, cache);
+
+                await handle.Task;
+
+                if (handle.Status != AsyncOperationStatus.Succeeded)
+                {
+                    Log.Print(Log.LogLevel.Error,$"[AddressablesUtils] Label preload 실패. label={label}, key={key}");
+                    _handleCache.Remove(key);
+                    Addressables.Release(handle);
+                }
+                await UniTask.Yield(PlayerLoopTiming.Update);
+            }
+
+            Addressables.Release(locationHandle);
+        }
     
         public static async UniTask<T> LoadAssetAsync<T>(string key) where T : Object
         {

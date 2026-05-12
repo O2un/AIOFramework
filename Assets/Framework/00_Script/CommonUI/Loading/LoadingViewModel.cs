@@ -1,5 +1,5 @@
 using Cysharp.Threading.Tasks;
-using O2un.NVVM;
+using O2un.MVVM;
 using R3;
 
 namespace O2un.UI

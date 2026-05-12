@@ -1,4 +1,4 @@
-using O2un.NVVM;
+using O2un.MVVM;
 using TMPro;
 using R3;
 using UnityEngine.UI;
@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace O2un.UI
 {
-    public sealed class LoadingView : SafeView<LoadingViewModel>
+    public sealed class LoadingView : ViewBase<LoadingViewModel>
     {
         [SerializeField] private Image _progressBar;
         [SerializeField] private TextMeshProUGUI _progressText;

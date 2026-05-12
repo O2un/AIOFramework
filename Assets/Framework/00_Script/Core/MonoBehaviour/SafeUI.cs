@@ -4,13 +4,13 @@ using O2un.Roslyn.Generator;
 using O2un.Utils;
 using UnityEngine;
 
-namespace O2un
+namespace O2un.Core
 {
-    public abstract partial class SafeUI : SafeMono
+    public abstract partial class SafeUI : SafeMono, ISafeInitializable
     {
         [RequireComponentField] private CanvasGroup _canvasGroup;
 
-        [SerializeField] private bool _isVisibleOnInit = false;
+        [SerializeField] protected bool _isVisibleOnInit = false;
         public bool IsVisible { get; private set; } = false;
         private const string TRANSITION_KEY = "UI_Transition";
         protected override async UniTask Init(CancellationToken ct)

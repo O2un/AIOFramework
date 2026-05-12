@@ -36,6 +36,6 @@ namespace O2un.Core
             SafeDispose();
         }
 
-        protected abstract void SafeDispose();
+        protected virtual void SafeDispose() {}
     }
 }

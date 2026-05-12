@@ -5,11 +5,12 @@ using Cysharp.Threading.Tasks;
 using O2un.Core;
 using O2un.DI;
 using R3;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace O2un
 {
-    public abstract class SafeMono : MonoBehaviour, IAsyncReady, ISafeDisposable
+    public abstract class SafeMono : MonoBehaviour, IAsyncReady, ISafeDisposable, IInitializable
     {
         public enum ReadyState
         {
@@ -26,11 +27,13 @@ namespace O2un
         public UniTaskCompletionSource ReadyCompletionSource => _readyCompletionSource ??= new();
 
 #region OBSOLETE_UNITY_EVENT
-        [Obsolete("SafeMono에서는 Start()를 사용할 수 없습니다. Init() 또는 LinkDependency()를 오버라이드 하세요.", true)]
+        [Obsolete("SafeMono에서는 Start()를 사용할 수 없습니다. Init() 오버라이드 하세요.", true)]
         private void Start() {}
+        [Obsolete("SafeMono에서는 Awake()를 사용할 수 없습니다. Init() 오버라이드 하세요.", true)]
+        private void Awake(){}
 #endregion
 
-        private void Awake()
+        public void Initialize()
         {
             if(ReadyState.Created != _state) return;
             _state = ReadyState.Initializing;

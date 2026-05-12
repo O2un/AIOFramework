@@ -24,10 +24,10 @@ namespace O2un.Pooling
         protected override async UniTask InitAsync()
         {
             var rootGo = new GameObject("[Pool Manager Root]");
-            Object.DontDestroyOnLoad(rootGo); // 싱글톤 스코프이므로 유지
+            Object.DontDestroyOnLoad(rootGo);
             _globalPoolRoot = rootGo.transform;
             
-            await UniTask.CompletedTask;
+            await AddressablesUtils.PreloadLabelAndCacheAsync<GameObject>("Objects");
         }
 
         [CallBase]
