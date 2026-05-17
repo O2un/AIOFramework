@@ -99,12 +99,10 @@ InitTestScene*.unity*
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
 
 /[Aa]ssets/Packages
-Assets/Framework/00_Script/Data/Generated
+Assets/0_Framework/00_Script/Data/Generated
 .idea
-Assets/Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/CodeGenerator/bin
-Assets/Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/CodeGenerator/obj
 Assets/3RD/
-Assets/Framework/00_Script/Core/CodeAnalyzer/.codeAnalyzer/CodeAnalyzer/bin/
-Assets/Framework/00_Script/Core/CodeAnalyzer/.codeAnalyzer/CodeAnalyzer/obj/
-Assets/Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/obj
-Assets/Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/bin
+Assets/0_Framework/00_Script/Core/CodeAnalyzer/.codeAnalyzer/CodeAnalyzer/bin/
+Assets/0_Framework/00_Script/Core/CodeAnalyzer/.codeAnalyzer/CodeAnalyzer/obj/
+Assets/0_Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/obj
+Assets/0_Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/bin

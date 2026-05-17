@@ -37,7 +37,7 @@ namespace O2un.Core
     
     public abstract class EditorConfig<T> : SystemConfig<T>, IEditorConfig where T : EditorConfig<T>
     {
-        public static string PATH => $"Assets/Framework/99_DEV/SystemConfig/{typeof(T).Name}.asset";
+        public static string PATH => $"Assets/0_Framework/99_DEV/SystemConfig/{typeof(T).Name}.asset";
     
         public static T GetConfig() => GetOrCreateSettings(PATH);
     }
