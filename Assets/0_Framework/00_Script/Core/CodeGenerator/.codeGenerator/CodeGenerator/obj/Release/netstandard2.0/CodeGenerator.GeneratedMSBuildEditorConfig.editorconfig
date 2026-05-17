@@ -1,0 +1,8 @@
+is_global = true
+build_property.RootNamespace = CodeGenerator
+build_property.ProjectDir = /Users/italog/Develop/Frameworks/AIOFramework/Assets/Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.CsWinRTUseWindowsUIXamlProjections = false
+build_property.EffectiveAnalysisLevelStyle = 
+build_property.EnableCodeStyleSeverity = 

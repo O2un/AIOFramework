@@ -1,0 +1,11 @@
+/Users/italog/Develop/Frameworks/AIOFramework/Assets/Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/bin/Debug/netstandard2.0/CodeGenerator.deps.json
+/Users/italog/Develop/Frameworks/AIOFramework/Assets/Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/bin/Debug/netstandard2.0/CodeGenerator.dll
+/Users/italog/Develop/Frameworks/AIOFramework/Assets/Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/bin/Debug/netstandard2.0/CodeGenerator.pdb
+/Users/italog/Develop/Frameworks/AIOFramework/Assets/Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/obj/Debug/netstandard2.0/CodeGenerator.csproj.AssemblyReference.cache
+/Users/italog/Develop/Frameworks/AIOFramework/Assets/Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/obj/Debug/netstandard2.0/CodeGenerator.GeneratedMSBuildEditorConfig.editorconfig
+/Users/italog/Develop/Frameworks/AIOFramework/Assets/Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/obj/Debug/netstandard2.0/CodeGenerator.AssemblyInfoInputs.cache
+/Users/italog/Develop/Frameworks/AIOFramework/Assets/Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/obj/Debug/netstandard2.0/CodeGenerator.AssemblyInfo.cs
+/Users/italog/Develop/Frameworks/AIOFramework/Assets/Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/obj/Debug/netstandard2.0/CodeGenerator.csproj.CoreCompileInputs.cache
+/Users/italog/Develop/Frameworks/AIOFramework/Assets/Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/obj/Debug/netstandard2.0/CodeGenerator.sourcelink.json
+/Users/italog/Develop/Frameworks/AIOFramework/Assets/Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/obj/Debug/netstandard2.0/CodeGenerator.dll
+/Users/italog/Develop/Frameworks/AIOFramework/Assets/Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/obj/Debug/netstandard2.0/CodeGenerator.pdb
