@@ -6,7 +6,8 @@
         "O2un.SubSystem",
         "O2un.UI",
         "UniTask",
-        "VContainer"
+        "VContainer",
+        "Unity.Addressables"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

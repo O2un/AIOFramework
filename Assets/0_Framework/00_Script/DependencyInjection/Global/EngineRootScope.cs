@@ -22,6 +22,7 @@ namespace O2un.DI
             RegisterProviders(builder);
 
             builder.RegisterEntryPoint<EngineBootStrapper>();
+            builder.RegisterDebugModules();
         }
 
         private void RegisterProviders(IContainerBuilder builder)

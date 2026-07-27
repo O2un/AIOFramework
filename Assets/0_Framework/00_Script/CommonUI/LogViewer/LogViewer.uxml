@@ -1,6 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
-    <Style src="project://database/Assets/00.Labinno/00_Script/Kiosk/LogViewer/UI/LogViewer.uss?fileID=7433441132597879392&amp;guid=4dd4a771462cbd64db081c73d02de921&amp;type=3#LogViewer"/>
-    <Style src="project://database/Assets/00.Labinno/00_Script/CommonUI/UIToolkit/Common.uss?fileID=7433441132597879392&amp;guid=415d31746d505dc4b9b30f41831bef12&amp;type=3#Common"/>
+    <Style src="project://database/Assets/0_Framework/00_Script/CommonUI/LogViewer/LogViewer.uss?fileID=7433441132597879392&amp;guid=85bdff3ef5301b048a5b0d4fc5abd10e&amp;type=3#LogViewer"/>
+    <Style src="project://database/Assets/0_Framework/00_Script/CommonUI/UIToolkit/Common.uss?fileID=7433441132597879392&amp;guid=2541f64ba972889429aa5f70431c129f&amp;type=3#Common"/>
     <ui:VisualElement name="LogViewerRoot" class="log-viewer">
         <ui:VisualElement class="log-header">
             <ui:VisualElement class="title-area">
