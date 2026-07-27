@@ -30,7 +30,7 @@ namespace O2un.Pooling
             await AddressablesUtils.PreloadLabelAndCacheAsync<GameObject>("Objects");
         }
 
-        [CallBase]
+        [MustCallBase]
         protected override void SafeDispose()
         {
             ClearAll();

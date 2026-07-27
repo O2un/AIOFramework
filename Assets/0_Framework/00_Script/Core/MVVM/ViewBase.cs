@@ -8,13 +8,15 @@ namespace O2un.MVVM
 {
     public interface IViewBase
     {
-        public void Bind(ViewModelBase viewModel);
+        void Bind(IViewModelBase viewModel);
+        Observable<Unit> OnTurnOnAfter { get; }
+        Observable<Unit> OnTurnOffAfter { get; }
     }
 
-    public abstract class ViewBase<T> : SafeUI, IViewBase where T : ViewModelBase
+    public abstract class ViewBase<T> : SafeUI, IViewBase where T : class, IViewModelBase
     {
         protected T Model {get; private set;}
-        public void Bind(ViewModelBase viewModel)
+        public void Bind(IViewModelBase viewModel)
         {
             if(viewModel is not T typedModel)
             {
@@ -35,27 +37,20 @@ namespace O2un.MVVM
                 await TurnOffAsync();
                 return;
             }
-            
+
             await Model.WaitUntilReadyAsync();
             Model.IsVisible.Subscribe(TurnOnOffFromVM).AddTo(DisposableR3);
             BindModel();
         }
-        
+
         private void TurnOnOffFromVM(bool isOn)
         {
-            if(isOn)
-            {
-                _ = TurnOnAsync();
-            }
-            else
-            {
-                _ = TurnOffAsync();
-            }
+            _ = Switch(isOn);
         }
 
         protected abstract void BindModel();
 
-        [CallBase]
+        [MustCallBase]
         protected override void SafeDestroy()
         {
             base.SafeDestroy();

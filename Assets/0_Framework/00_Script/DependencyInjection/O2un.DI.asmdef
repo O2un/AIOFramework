@@ -1,0 +1,21 @@
+{
+    "name": "O2un.DI",
+    "rootNamespace": "O2un.DI",
+    "references": [
+        "O2un.Core",
+        "O2un.SubSystem",
+        "O2un.UI",
+        "UniTask",
+        "VContainer",
+        "Unity.Addressables"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

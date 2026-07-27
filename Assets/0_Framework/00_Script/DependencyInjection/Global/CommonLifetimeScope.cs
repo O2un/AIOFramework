@@ -19,7 +19,7 @@ namespace O2un.DI
         private readonly List<ISafeInitializable> _initTargets = new();
         protected abstract void ConfigureScene(IContainerBuilder builder);
 
-        [CallBase]
+        [MustCallBase]
         protected override void Configure(IContainerBuilder builder)
         {
             // Configure CommonScene
@@ -63,6 +63,11 @@ namespace O2un.DI
 
         private void InjectTargets(IObjectResolver resolver)
         {
+            if(null == _batchedRoots)
+            {
+                return;
+            }
+
             foreach (var batchRoot in _batchedRoots)
             {
                 var contextList = batchRoot.GetComponentsInChildren<SafeMono>(true);

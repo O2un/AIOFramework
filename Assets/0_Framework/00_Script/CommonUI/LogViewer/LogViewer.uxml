@@ -1,0 +1,60 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/0_Framework/00_Script/CommonUI/LogViewer/LogViewer.uss?fileID=7433441132597879392&amp;guid=85bdff3ef5301b048a5b0d4fc5abd10e&amp;type=3#LogViewer"/>
+    <Style src="project://database/Assets/0_Framework/00_Script/CommonUI/UIToolkit/Common.uss?fileID=7433441132597879392&amp;guid=2541f64ba972889429aa5f70431c129f&amp;type=3#Common"/>
+    <ui:VisualElement name="LogViewerRoot" class="log-viewer">
+        <ui:VisualElement class="log-header">
+            <ui:VisualElement class="title-area">
+                <ui:Label text="Live Log Viewer" class="title"/>
+                <ui:Label name="FilePathLabel" text="No log file selected" class="subtitle"/>
+            </ui:VisualElement>
+            <ui:TextField label="최대 로그 갯수" value="500" name="MaxCount" max-length="10" keyboard-type="NumberPad" focusable="true" class="max-count"/>
+            <ui:Toggle name="UTCToggle" value="true" class="toggle-chip">
+                <ui:Label name="UTCToggleLabel" text="UTC" picking-mode="Ignore" class="toggle-chip-label"/>
+            </ui:Toggle>
+        </ui:VisualElement>
+        <ui:VisualElement class="toolbar">
+            <ui:TextField name="SearchField" class="search-field"/>
+            <ui:VisualElement class="level-filters">
+                <ui:Toggle name="InfoToggle" label="Info" value="true" toggle-on-label-click="true" focusable="false" class="level-toggle info"/>
+                <ui:Toggle name="WarningToggle" label="Warn" value="true" focusable="false" class="level-toggle warning"/>
+                <ui:Toggle name="ErrorToggle" label="Error" value="true" focusable="false" class="level-toggle error"/>
+            </ui:VisualElement>
+            <ui:Toggle name="AutoScrollToggle" label="Auto Scroll" value="true" class="auto-scroll-toggle"/>
+            <ui:Toggle name="LiveToggle" label="Live" value="true" class="live-toggle"/>
+        </ui:VisualElement>
+        <ui:VisualElement class="content">
+            <ui:VisualElement class="log-panel">
+                <ui:VisualElement class="log-table-header">
+                    <ui:Label text="Time" class="col-time"/>
+                    <ui:Label text="Level" class="col-level"/>
+                    <ui:Label text="Message" class="col-message"/>
+                </ui:VisualElement>
+                <ui:VisualElement class="log-list-area">
+                    <ui:ListView name="LogList" virtualization-method="DynamicHeight" class="log-list"/>
+                    <ui:VisualElement name="EmptyState" class="empty-state u-invisible">
+                        <ui:Label text="로그 파일을 열거나 Live 모드를 시작하면 로그가 표시됩니다." class="empty-title"/>
+                        <ui:Label text="Info / Warn / Error 필터와 검색어를 조합해서 확인할 수 있습니다." class="empty-subtitle"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement class="detail-panel">
+                <ui:VisualElement class="detail-header">
+                    <ui:Label text="Selected Log Detail" class="detail-title"/>
+                    <ui:Button name="CopyDetailButton" text="Copy" class="small-button"/>
+                </ui:VisualElement>
+                <ui:ScrollView name="DetailScroll" mode="Vertical" class="detail-scroll">
+                    <ui:Label name="DetailText" text="선택된 로그가 없습니다." class="detail-text"/>
+                </ui:ScrollView>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="status-bar">
+            <ui:Label name="StatusLabel" text="Ready" class="status-text"/>
+            <ui:Label name="CountLabel" text="0 logs" class="count-text"/>
+        </ui:VisualElement>
+        <ui:VisualElement name="ToastLayer" picking-mode="Ignore" class="toast-layer">
+            <ui:VisualElement name="CopyToast" class="toast u-invisible">
+                <ui:Label text="복사 완료" class="toast-text"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

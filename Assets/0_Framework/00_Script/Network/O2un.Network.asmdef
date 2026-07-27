@@ -1,0 +1,17 @@
+{
+    "name": "O2un.Network",
+    "rootNamespace": "O2un.Core.Network",
+    "references": [
+        "O2un.Core",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

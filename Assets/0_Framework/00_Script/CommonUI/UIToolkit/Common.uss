@@ -1,0 +1,20 @@
+/*
+ * 여러 화면이 공유하는 UI Toolkit 상태 클래스.
+ * uxml 의 <Style> 순서에서 이 파일이 화면 uss 보다 뒤에 와야 한다.
+ * USS 는 같은 특이도면 나중 선언이 이기므로, 순서가 바뀌면 상태 클래스가 화면 규칙에 밀린다.
+ */
+
+.u-invisible {
+    display: none;
+    visibility: hidden;
+    opacity: 0;
+}
+
+.u-hidden {
+    visibility: hidden;
+    opacity: 0;
+}
+
+.u-disabled {
+    opacity: 0.4;
+}

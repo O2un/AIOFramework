@@ -37,5 +37,10 @@ namespace O2un.Core
         }
 
         protected virtual void SafeDispose() {}
+
+        public T Track<T, TState>(T element, TState state, Action<T, TState> subscribe, Action<T, TState> unsubscribe)
+        {
+            return SafeDisposableExtensions.Track(this, element, state, subscribe, unsubscribe);
+        }
     }
 }

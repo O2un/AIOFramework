@@ -1,0 +1,19 @@
+{
+    "name": "O2un.Core",
+    "rootNamespace": "O2un",
+    "references": [
+        "UniTask",
+        "R3.Unity",
+        "Unity.Addressables",
+        "Unity.ResourceManager"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
