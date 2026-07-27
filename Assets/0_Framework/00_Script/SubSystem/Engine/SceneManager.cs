@@ -1,5 +1,6 @@
 using Cysharp.Threading.Tasks;
 using R3;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using O2un.Utils;
 
@@ -17,15 +18,23 @@ namespace O2un.Core
 
         private const string LOADING_SCENE_NAME = "LoadingScene";
 
+        /// <summary>초당 채워지는 로딩바 비율. 1f면 0 → 1까지 최소 1초.</summary>
+        private const float PROGRESS_SPEED = 1.0f;
+
         private readonly ReactiveProperty<SceneState> _currentState = new(SceneState.Idle);
-        private readonly ReactiveProperty<float> _loadingProgress = new(0f);
         public ReadOnlyReactiveProperty<SceneState> CurrentState => _currentState;
-        public ReadOnlyReactiveProperty<float> LoadingProgress => _loadingProgress;
+
+        // 진행률은 Provider가 소유한다. SceneManager는 쓰기만 하고, UI는 같은 Runtime을 읽는다.
+        private readonly LoadingRuntime _loadingRuntime;
+
+        public SceneManager(ILoadingProvider provider)
+        {
+            _loadingRuntime = provider.GetRuntime(LoadingType.Scene);
+        }
 
         protected override void SafeDispose()
         {
             _currentState.Dispose();
-            _loadingProgress.Dispose();
         }
 
         protected override async UniTask InitAsync()
@@ -45,7 +54,7 @@ namespace O2un.Core
                 try
                 {
                     _currentState.Value = SceneState.TransitioningToLoading;
-                    _loadingProgress.Value = 0f;
+                    _loadingRuntime.Set(0f);
                     
                     await UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(LOADING_SCENE_NAME, LoadSceneMode.Single).WithCancellation(ct);
 
@@ -54,14 +63,23 @@ namespace O2un.Core
                     var loadOp = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(targetSceneName, LoadSceneMode.Single);
                     loadOp.allowSceneActivation = false;
 
+                    float displayProgress = 0f;
                     while (loadOp.progress < 0.9f)
                     {
                         ct.ThrowIfCancellationRequested();
-                        _loadingProgress.Value = loadOp.progress;
+                        displayProgress = Mathf.MoveTowards(displayProgress, loadOp.progress, Time.deltaTime * PROGRESS_SPEED);
+                        _loadingRuntime.Set(displayProgress);
                         await UniTask.Yield(PlayerLoopTiming.Update, ct);
                     }
 
-                    _loadingProgress.Value = 1f;
+                    while (displayProgress < 1f)
+                    {
+                        ct.ThrowIfCancellationRequested();
+                        displayProgress = Mathf.MoveTowards(displayProgress, 1f, Time.deltaTime * PROGRESS_SPEED);
+                        _loadingRuntime.Set(displayProgress);
+                        await UniTask.Yield(PlayerLoopTiming.Update, ct);
+                    }
+
                     _currentState.Value = SceneState.TransitioningToTarget;
 
                     loadOp.allowSceneActivation = true;
@@ -73,7 +91,7 @@ namespace O2un.Core
                     _currentState.Value = SceneState.Idle;
                     if (ct.IsCancellationRequested)
                     {
-                        _loadingProgress.Value = 0f;
+                        _loadingRuntime.Set(0f);
                     }
                 }
             });

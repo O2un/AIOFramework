@@ -21,7 +21,7 @@ namespace O2un.UI
         private void UpdateProgressUI(float progress)
         {
             if (_progressBar != null) _progressBar.fillAmount = progress;
-            if (_progressText != null) _progressText.SetText("0",progress*100f);
+            if (_progressText != null) _progressText.SetText("{0.0}",progress*100f);
         }
     }
 }

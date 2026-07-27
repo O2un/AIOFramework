@@ -12,7 +12,6 @@ namespace O2un.DI
     {
         protected override void Configure(IContainerBuilder builder)
         {
-            // 자식 Scope들이 같은 인스턴스를 받아야 상위/하위 무관하게 이벤트가 오간다
             builder.Register<UIEventBus>(Lifetime.Singleton).As<IUIEventPublisher, IUIEventSubscriber>();
 
             builder.Register<LogManager>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
@@ -20,7 +19,14 @@ namespace O2un.DI
             builder.Register<NetworkManager>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
             builder.Register<SceneManager>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
 
+            RegisterProviders(builder);
+
             builder.RegisterEntryPoint<EngineBootStrapper>();
+        }
+
+        private void RegisterProviders(IContainerBuilder builder)
+        {
+            builder.Register<LoadingProvider>(Lifetime.Singleton).As<ILoadingProvider>();
         }
     }
 }

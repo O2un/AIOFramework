@@ -2,81 +2,66 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using O2un.Core;
+using O2un.Utils;
 using R3;
 using UnityEngine;
 
 namespace O2un.UI
 {
-    public interface ILoadingSource
+    /// <summary>
+    /// Provider에 등록되지 않는 개발용 소스. 5초에 걸쳐 0 → 1을 스스로 채운다.
+    /// </summary>
+    public sealed class MockLoadingSource : SafeDisposableClass, ILoadingSource
     {
-        public ReadOnlyReactiveProperty<float> Progress {get;}
-    }
+        private readonly ReactiveProperty<float> _progress = new();
+        public ReadOnlyReactiveProperty<float> Progress => _progress;
 
-    public sealed class SceneLoadingSource : ILoadingSource
-    {
-        public ReadOnlyReactiveProperty<float> Progress => _scenemanager.LoadingProgress;
-        private readonly SceneManager _scenemanager;
-        public SceneLoadingSource(SceneManager sceneManager)
-        {
-            _scenemanager = sceneManager;
-        }
-    }
-
-    public sealed class MockLoadingSource : ILoadingSource
-    {
-        private readonly ReactiveProperty<float> _progress01 = new();
-        public ReadOnlyReactiveProperty<float> Progress => _progress01;
-        private readonly CancellationTokenSource _cts = new();
-        private bool _disposed;
         public MockLoadingSource()
         {
-            RunMockAsync(_cts.Token).Forget();
+            this.StartAsync(async ct =>
+            {
+                await RunMockAsync(ct);
+            });
         }
 
-        private async UniTaskVoid RunMockAsync(CancellationToken token)
+        private async UniTask RunMockAsync(CancellationToken token)
         {
             const float duration = 5f;
             float elapsed = 0f;
 
             try
             {
-                _progress01.Value = 0f;
+                _progress.Value = 0f;
 
                 while (elapsed < duration)
                 {
                     token.ThrowIfCancellationRequested();
-                    if (_disposed) return;
+                    if (IsDisposed)
+                    {
+                        return;
+                    }
 
                     elapsed += Time.deltaTime;
-                    _progress01.Value = Mathf.Clamp01(elapsed / duration);
+                    _progress.Value = Mathf.Clamp01(elapsed / duration);
 
                     await UniTask.Yield(PlayerLoopTiming.Update, token);
                 }
 
-                if (_disposed) return;
+                if (IsDisposed)
+                {
+                    return;
+                }
 
-                _progress01.Value = 1f;
+                _progress.Value = 1f;
             }
             catch (OperationCanceledException)
             {
             }
         }
 
-        public void Dispose()
+        protected override void SafeDispose()
         {
-            if (_disposed) return;
-            _disposed = true;
-            _cts.Cancel();
-            _cts.Dispose();
-            _progress01.Dispose();
+            _progress.Dispose();
         }
-    }
-
-    public enum LoadingType
-    {
-        Scene,
-        Patch,
-        Resources,
-        Mock,
     }
 }

@@ -63,6 +63,11 @@ namespace O2un.DI
 
         private void InjectTargets(IObjectResolver resolver)
         {
+            if(null == _batchedRoots)
+            {
+                return;
+            }
+
             foreach (var batchRoot in _batchedRoots)
             {
                 var contextList = batchRoot.GetComponentsInChildren<SafeMono>(true);
