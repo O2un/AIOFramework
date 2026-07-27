@@ -2,7 +2,6 @@ using System;
 using Cysharp.Threading.Tasks;
 using O2un.Core;
 using O2un.Core.Utils;
-using O2un.DI;
 
 namespace O2un
 {

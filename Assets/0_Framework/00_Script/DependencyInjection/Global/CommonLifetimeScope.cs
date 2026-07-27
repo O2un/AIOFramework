@@ -19,7 +19,7 @@ namespace O2un.DI
         private readonly List<ISafeInitializable> _initTargets = new();
         protected abstract void ConfigureScene(IContainerBuilder builder);
 
-        [CallBase]
+        [MustCallBase]
         protected override void Configure(IContainerBuilder builder)
         {
             // Configure CommonScene

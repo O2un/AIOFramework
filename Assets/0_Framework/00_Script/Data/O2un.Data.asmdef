@@ -1,0 +1,17 @@
+{
+    "name": "O2un.Data",
+    "rootNamespace": "O2un.Data",
+    "references": [
+        "O2un.Core",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

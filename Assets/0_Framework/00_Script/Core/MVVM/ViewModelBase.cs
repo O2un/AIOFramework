@@ -1,7 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
 using O2un.Core;
-using O2un.DI;
 using O2un.Roslyn.Analyzer;
 using R3;
 

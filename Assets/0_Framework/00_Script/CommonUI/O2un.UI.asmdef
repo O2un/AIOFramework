@@ -1,0 +1,21 @@
+{
+    "name": "O2un.UI",
+    "rootNamespace": "O2un.UI",
+    "references": [
+        "O2un.Core",
+        "O2un.SubSystem",
+        "UniTask",
+        "R3.Unity",
+        "VContainer",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

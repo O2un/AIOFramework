@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using O2un.Core;
-using O2un.DI;
 using R3;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace O2un
 {
-    public abstract class SafeMono : MonoBehaviour, IAsyncReady, ISafeDisposable, IInitializable
+    public abstract class SafeMono : MonoBehaviour, IAsyncReady, ISafeDisposable
     {
         public enum ReadyState
         {

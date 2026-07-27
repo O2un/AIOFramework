@@ -1,6 +1,4 @@
 using Cysharp.Threading.Tasks;
-using Unity.Entities;
-using UnityEngine;
 
 namespace O2un.Core.Utils
 {

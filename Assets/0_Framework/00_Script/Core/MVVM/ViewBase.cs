@@ -55,7 +55,7 @@ namespace O2un.MVVM
 
         protected abstract void BindModel();
 
-        [CallBase]
+        [MustCallBase]
         protected override void SafeDestroy()
         {
             base.SafeDestroy();

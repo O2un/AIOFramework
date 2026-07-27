@@ -1,0 +1,20 @@
+{
+    "name": "O2un.Dev",
+    "rootNamespace": "O2un.DEV",
+    "references": [
+        "O2un.Core",
+        "O2un.SubSystem",
+        "O2un.Network",
+        "UniTask",
+        "R3.Unity"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

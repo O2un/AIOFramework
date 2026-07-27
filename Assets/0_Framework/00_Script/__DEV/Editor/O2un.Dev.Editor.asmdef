@@ -1,0 +1,19 @@
+{
+    "name": "O2un.Dev.Editor",
+    "rootNamespace": "O2un.DEV",
+    "references": [
+        "O2un.Core",
+        "O2un.Dev"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,7 +1,6 @@
 using Cysharp.Threading.Tasks;
-using UnityEngine;
 
-namespace O2un.DI
+namespace O2un.Core
 {
     public interface IAsyncReady
     {

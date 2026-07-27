@@ -16,7 +16,7 @@ namespace O2un.MVVM
     {
         [RequireComponentField] private V _view;
         public M Model { get; private set; }
-        [CallBase]
+        [MustCallBase]
         protected override async UniTask Init(CancellationToken ct)
         {
             await base.Init(ct);
@@ -31,7 +31,7 @@ namespace O2un.MVVM
         }
         protected abstract M CreateModel();
 
-        [CallBase]
+        [MustCallBase]
         protected override void SafeDestroy()
         {
             Model?.Dispose();
