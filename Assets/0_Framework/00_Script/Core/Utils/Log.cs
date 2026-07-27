@@ -1,7 +1,10 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using O2un.Utils;
 using UnityEngine;
 
 namespace O2un.Core.Utils
@@ -10,12 +13,12 @@ namespace O2un.Core.Utils
     {
         public enum LogLevel
         {
-            Trace, // 디버깅
-            Debug, // 디버깅
-            Info,  // 일반 정보 (실행 기기정보 등)
+            Trace,   // 디버깅
+            Debug,   // 디버깅
+            Info,    // 일반 정보 (실행 기기정보 등)
             Warning, // 잠재적으로 문제가 발생 할 수 있는 경고
-            Error, // 반드시 처리해야하는 에러
-            Fatal, // 치명적인 오류 (프로그램 종료해야 하는 수준)
+            Error,   // 반드시 처리해야하는 에러
+            Fatal,   // 치명적인 오류 (프로그램 종료해야 하는 수준)
         }
 
         public enum LogFilter
@@ -26,100 +29,160 @@ namespace O2un.Core.Utils
             Etc,
         }
 
-        private static readonly Dictionary<LogFilter, string> CACHE = new();
-        private static string ToStringOPT(this LogFilter type)
-        {
-            lock(CACHE)
-            {
-                if(CACHE.TryGetValue(type, out var str))
-                {
-                    return str;
-                }
-                
-                str = type.ToString();
-                CACHE.Add(type,str);
-                return str;
-            }
-        }
-        
 #if ENABLE_FILE_LOG
-        private static readonly ConcurrentQueue<string> _logQueue = new();
+        private static readonly ConcurrentQueue<LogData> _logQueue = new();
+        private static int _isFlushing;
+        private static string _logFilePath = string.Empty;
 #endif
+
         private static readonly object _fileLock = new();
-        
-        private const int MAX_LOG_COUNT_BEFORE_FLUSH = 50;
-        private const float FLUSH_INTERVAL_SECONDS = 5f;
+
+        public static event Action<LogData> Logged;
+
 #if ENABLE_FILE_LOG
-        private static float _timeSinceLastFlush = 0f;
-        private static string _logFilePath = "";
-#endif
-        public static void Init()
+        public static void InitFile(string logFilePath)
         {
-#if ENABLE_FILE_LOG
-            string logDirectory = Path.Combine(Application.persistentDataPath, "Logs");
-            if (!Directory.Exists(logDirectory))
-            {
-                Directory.CreateDirectory(logDirectory);
-            }
-            
-            string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-            _logFilePath = Path.Combine(logDirectory, $"AppLog_{timestamp}.log");
-            
-            Application.quitting -= FlushToFile;
-            Application.quitting += FlushToFile;
-#endif
+            _logFilePath = logFilePath ?? string.Empty;
         }
-        
+#else
+        public static void InitFile(string logFilePath)
+        {
+        }
+#endif
+
         [System.Diagnostics.Conditional("UNITY_EDITOR")]
         [HideInCallstack]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Dev(string str, LogLevel type = LogLevel.Debug, [CallerMemberName] string caller = "")
+        public static void Dev(object str, LogLevel type = LogLevel.Debug, [CallerMemberName] string caller = "")
         {
             Print(type, str, LogFilter.None, caller);
         }
-        
-        [ThreadStatic] static StringBuilder _sb;
-        private static StringBuilder SB => _sb ??= new StringBuilder(256);
+
         [HideInCallstack]
-        public static void Print(LogLevel type, string str, LogFilter filter = LogFilter.None, [CallerMemberName] string caller = "")
+        public static void Print(LogLevel type, object str, LogFilter filter = LogFilter.None, [CallerMemberName] string caller = "", Exception exception = null)
         {
-            var sb = SB;
-            sb.Clear();
-            
-#if ENABLE_FILE_LOG
-            sb.Append("[");
-            sb.Append(DateTime.Now.ToString("MM-dd HH:mm:ss.fff"));
-            sb.Append("] ");
-            int timePrefixLength = sb.Length;
+            string text = string.IsNullOrWhiteSpace(caller) ? str?.ToString() : $"[{caller}] - {str}";
+            var data = new LogData(type, text, DateTime.UtcNow, filter);
+
+#if ENABLE_EDITOR_LOG || UNITY_EDITOR
+            LogToEditor(type, data.ToDisplayString(), exception);
 #endif
-            if(LogFilter.None != filter)
-            {
-                sb.Append("[");
-                sb.Append(filter.ToStringOPT());
-                sb.Append("]");
-            }
-            sb.Append("|");
-            sb.Append("[");
-            sb.Append(caller);
-            sb.Append("]");
-            sb.Append(" - ");
-            sb.Append(str);
-            
+
 #if ENABLE_FILE_LOG
-            var editorMsg = sb.ToString(timePrefixLength, sb.Length - timePrefixLength);
-            LogToEditor(type, editorMsg);
-            var fileMsg = sb.ToString();
-            _logQueue.Enqueue(fileMsg);
+            if (false == string.IsNullOrEmpty(_logFilePath))
+            {
+                _logQueue.Enqueue(data);
+            }
+#endif
+
+            Logged?.Invoke(data);
+        }
+
+        public static async UniTask FlushAsync()
+        {
+#if ENABLE_FILE_LOG
+            if (string.IsNullOrEmpty(_logFilePath))
+            {
+                return;
+            }
+
+            if (_logQueue.IsEmpty)
+            {
+                return;
+            }
+
+            if (1 == Interlocked.Exchange(ref _isFlushing, 1))
+            {
+                return;
+            }
+
+            try
+            {
+                string textToWrite = DequeueToText();
+
+                if (string.IsNullOrEmpty(textToWrite))
+                {
+                    return;
+                }
+
+                await UniTask.RunOnThreadPool(() =>
+                {
+                    lock (_fileLock)
+                    {
+                        FileIOUtils.StreamAppendFile(_logFilePath, textToWrite);
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+#if ENABLE_EDITOR_LOG || UNITY_EDITOR
+                Debug.LogException(e);
+#endif
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _isFlushing, 0);
+            }
 #else
-            var final = sb.ToString();
-            LogToEditor(type, final);
+            await UniTask.CompletedTask;
 #endif
         }
 
-        [System.Diagnostics.Conditional("ENABLE_EDITOR_LOG"),System.Diagnostics.Conditional("UNITY_EDITOR")]
+        public static void ForceFlush()
+        {
+#if ENABLE_FILE_LOG
+            if (string.IsNullOrEmpty(_logFilePath))
+            {
+                return;
+            }
+
+            if (_logQueue.IsEmpty)
+            {
+                return;
+            }
+
+            lock (_fileLock)
+            {
+                string textToWrite = DequeueToText();
+
+                if (string.IsNullOrEmpty(textToWrite))
+                {
+                    return;
+                }
+
+                FileIOUtils.StreamAppendFile(_logFilePath, textToWrite);
+            }
+#endif
+        }
+
+#if ENABLE_FILE_LOG
+        public static int GetPendingCount()
+        {
+            return _logQueue.Count;
+        }
+
+        private static string DequeueToText()
+        {
+            var sb = new StringBuilder();
+
+            while (_logQueue.TryDequeue(out LogData logData))
+            {
+                sb.AppendLine(logData.ToJson());
+            }
+
+            return sb.ToString();
+        }
+#else
+        public static int GetPendingCount()
+        {
+            return 0;
+        }
+#endif
+
+#if ENABLE_EDITOR_LOG || UNITY_EDITOR
         [HideInCallstack]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void LogToEditor(LogLevel type, string str)
+        private static void LogToEditor(LogLevel type, object str, Exception e)
         {
             switch (type)
             {
@@ -136,39 +199,12 @@ namespace O2un.Core.Utils
                     Debug.LogError(str);
                     break;
             }
-        }
-        
-        [System.Diagnostics.Conditional("ENABLE_FILE_LOG")]
-        private static void FlushToFile()
-        {
-#if ENABLE_FILE_LOG
-            if (_logQueue.IsEmpty) return;
 
-            lock (_fileLock)
+            if (null != e)
             {
-                using var stream = File.Open(_logFilePath, FileMode.Append, FileAccess.Write, FileShare.Read);
-                using var writer = new StreamWriter(stream);
-                
-                while (_logQueue.TryDequeue(out string logLine))
-                {
-                    writer.WriteLine(logLine);
-                }
+                Debug.LogException(e);
             }
-
-            _timeSinceLastFlush = 0f;
-#endif
         }
-        
-        [System.Diagnostics.Conditional("ENABLE_FILE_LOG")]
-        public static void UpdateFlush(float deltaTime)
-        {
-#if ENABLE_FILE_LOG
-            _timeSinceLastFlush += deltaTime;
-            if (_logQueue.Count >= MAX_LOG_COUNT_BEFORE_FLUSH || _timeSinceLastFlush >= FLUSH_INTERVAL_SECONDS)
-            {
-                FlushToFile();
-            }
 #endif
-        }
     }
 }
