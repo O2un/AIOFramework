@@ -1,12 +1,19 @@
 using System;
 using Cysharp.Threading.Tasks;
 using O2un.Core;
-using O2un.Roslyn.Analyzer;
+using O2un.Core.Utils;
 using R3;
 
 namespace O2un.MVVM
 {
-    public abstract class ViewModelBase : SafeDisposableClass, IAsyncReady
+    public interface IViewModelBase
+    {
+        void TryInit(bool isVisibleOnInit);
+        UniTask WaitUntilReadyAsync();
+        ReadOnlyReactiveProperty<bool> IsVisible { get; }
+    }
+
+    public abstract class ViewModelBase : SafeDisposableClass, IAsyncReady, IViewModelBase
     {
         private readonly UniTaskCompletionSource _readySource = new();
         private bool _isInit;
@@ -34,7 +41,7 @@ namespace O2un.MVVM
             catch (Exception e)
             {
                 _readySource.TrySetException(e);
-                UnityEngine.Debug.LogError($"[{GetType().Name}] ViewModel 초기화 실패: {e.Message}");
+                Log.Print(Log.LogLevel.Error, $"[{GetType().Name}] ViewModel 초기화 실패: {e.Message}");
             }
         }
 

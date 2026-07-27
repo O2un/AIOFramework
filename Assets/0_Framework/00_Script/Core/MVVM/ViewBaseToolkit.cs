@@ -6,14 +6,7 @@ using R3;
 
 namespace O2un.MVVM
 {
-    public interface IViewBase
-    {
-        void Bind(IViewModelBase viewModel);
-        Observable<Unit> OnTurnOnAfter { get; }
-        Observable<Unit> OnTurnOffAfter { get; }
-    }
-
-    public abstract class ViewBase<T> : SafeUI, IViewBase where T : class, IViewModelBase
+    public abstract class ViewBaseToolkit<T> : SafeUIToolkit, IViewBase where T : class, IViewModelBase
     {
         protected T Model {get; private set;}
         public void Bind(IViewModelBase viewModel)
@@ -30,7 +23,7 @@ namespace O2un.MVVM
             _=BindModelAsync();
         }
 
-        protected async UniTask BindModelAsync()
+        private async UniTask BindModelAsync()
         {
             if(null == Model)
             {
@@ -38,6 +31,9 @@ namespace O2un.MVVM
                 return;
             }
 
+            // BindElements 는 Init 안에서, BindModel 은 Bind 경로에서 호출된다.
+            // 양쪽이 끝난 뒤여야 ViewRoot 와 Model 이 모두 살아있다.
+            await WaitUntilReadyAsync();
             await Model.WaitUntilReadyAsync();
             Model.IsVisible.Subscribe(TurnOnOffFromVM).AddTo(DisposableR3);
             BindModel();
@@ -45,7 +41,7 @@ namespace O2un.MVVM
 
         private void TurnOnOffFromVM(bool isOn)
         {
-            _ = Switch(isOn);
+            _= SwitchAsync(isOn);
         }
 
         protected abstract void BindModel();
