@@ -1,4 +1,5 @@
 using O2un.Core;
+using O2un.Core.Data;
 using O2un.Core.Events;
 using O2un.Core.Network;
 using O2un.Core.Utils;
@@ -28,6 +29,7 @@ namespace O2un.DI
         private void RegisterProviders(IContainerBuilder builder)
         {
             builder.Register<LoadingProvider>(Lifetime.Singleton).As<ILoadingProvider>();
+            builder.Register<RuntimeDataProvider>(Lifetime.Singleton).As<IRuntimeDataProvider>();
         }
     }
 }

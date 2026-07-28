@@ -192,7 +192,7 @@ namespace O2un.Core.Network
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 // Log.Print(Log.LogLevel.Error, $"파싱에러 : {ex.Message}");
             }
