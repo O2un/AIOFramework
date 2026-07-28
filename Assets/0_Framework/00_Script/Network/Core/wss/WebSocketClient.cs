@@ -4,6 +4,7 @@ using System.Net.WebSockets;
 using System.Text.Json;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using O2un.Core.Utils;
 using O2un.Utils;
 
 namespace O2un.Core.Network
@@ -192,9 +193,9 @@ namespace O2un.Core.Network
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Log.Print(Log.LogLevel.Error, $"파싱에러 : {ex.Message}");
+                Log.Print(Log.LogLevel.Error, $"WebSocket 프로토콜 파싱 실패: {ex.Message}");
             }
         }
 

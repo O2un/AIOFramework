@@ -46,25 +46,25 @@ namespace O2un.DEV
 
             using (new EditorGUI.DisabledScope(isRunning || isBusy))
             {
-                if (GUILayout.Button("시작", EditorStyles.toolbarButton, GUILayout.Width(50)))
+                if (true == GUILayout.Button("시작", EditorStyles.toolbarButton, GUILayout.Width(50)))
                     TestServerLauncher.Start();
             }
 
             using (new EditorGUI.DisabledScope(false == isRunning))
             {
-                if (GUILayout.Button("중지", EditorStyles.toolbarButton, GUILayout.Width(50)))
+                if (true == GUILayout.Button("중지", EditorStyles.toolbarButton, GUILayout.Width(50)))
                     TestServerLauncher.Stop();
             }
 
             using (new EditorGUI.DisabledScope(isBusy || false == isRunning))
             {
-                if (GUILayout.Button("자가 진단", EditorStyles.toolbarButton, GUILayout.Width(70)))
+                if (true == GUILayout.Button("자가 진단", EditorStyles.toolbarButton, GUILayout.Width(70)))
                     TestServerLauncher.Diagnose();
             }
 
             using (new EditorGUI.DisabledScope(isBusy))
             {
-                if (GUILayout.Button("npm install", EditorStyles.toolbarButton, GUILayout.Width(80)))
+                if (true == GUILayout.Button("npm install", EditorStyles.toolbarButton, GUILayout.Width(80)))
                     TestServerLauncher.Install();
             }
 
@@ -72,17 +72,17 @@ namespace O2un.DEV
 
             _followTail = GUILayout.Toggle(_followTail, "자동 스크롤", EditorStyles.toolbarButton, GUILayout.Width(80));
 
-            if (GUILayout.Button("로그 지우기", EditorStyles.toolbarButton, GUILayout.Width(80)))
+            if (true == GUILayout.Button("로그 지우기", EditorStyles.toolbarButton, GUILayout.Width(80)))
                 TestServerLauncher.ClearLog();
         }
 
         private void DrawStatus()
         {
-            if (TestServerLauncher.IsTaskRunning)
+            if (true == TestServerLauncher.IsTaskRunning)
             {
                 EditorGUILayout.HelpBox("작업 실행 중", MessageType.Info);
             }
-            else if (TestServerLauncher.IsRunning)
+            else if (true == TestServerLauncher.IsRunning)
             {
                 EditorGUILayout.HelpBox("실행 중 — ws://localhost:8080 (Play 진입·도메인 리로드에도 유지됩니다)", MessageType.Info);
             }

@@ -88,7 +88,12 @@ function createRoom(ws, data) {
 }
 
 function joinRoom(ws, data) {
-    const room = rooms.get((data.roomCode ?? '').toUpperCase());
+    if ('string' !== typeof data.roomCode) {
+        server.send(ws, 'joinRoomResult', { success: false, error: 'INVALID_ROOM_CODE' });
+        return;
+    }
+
+    const room = rooms.get(data.roomCode.toUpperCase());
 
     if (!room) {
         server.send(ws, 'joinRoomResult', { success: false, error: 'ROOM_NOT_FOUND' });

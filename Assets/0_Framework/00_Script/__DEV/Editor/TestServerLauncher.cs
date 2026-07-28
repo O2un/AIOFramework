@@ -25,6 +25,7 @@ namespace O2un.DEV
 #endif
         private const string NodeExecutable = "node";
         private const string PidKey = "O2un.TestServer.Pid";
+        private const string PidStartTicksKey = "O2un.TestServer.PidStartTicks";
         private const int MaxLines = 500;
 
         /// <summary>index.js 의 PORT 와 같아야 한다. 여기서는 기동 전 점유 확인에만 쓴다.</summary>
@@ -63,7 +64,7 @@ namespace O2un.DEV
 
         public static void Start()
         {
-            if (IsRunning) return;
+            if (true == IsRunning) return;
 
             if (false == HasNode())
             {
@@ -77,7 +78,7 @@ namespace O2un.DEV
                 return;
             }
 
-            if (IsPortInUse(ServerPort))
+            if (true == IsPortInUse(ServerPort))
             {
                 Append($"포트 {ServerPort} 가 이미 사용 중입니다. 이전 실행의 node 가 남아 있는지 확인하세요.");
                 return;
@@ -87,7 +88,7 @@ namespace O2un.DEV
             _server = Spawn(NodeExecutable, "index.js", false);
             if (null == _server) return;
 
-            SessionState.SetInt(PidKey, _server.Id);
+            Remember(_server);
             _logOffset = 0;
             _expectServerAlive = true;
             Append($"서버 시작 — pid {_server.Id}");
@@ -101,14 +102,14 @@ namespace O2un.DEV
 
             _expectServerAlive = false;
             Kill(ref _server);
-            SessionState.EraseInt(PidKey);
+            Forget();
 
-            if (wasRunning) Append("서버 중지");
+            if (true == wasRunning) Append("서버 중지");
         }
 
         public static void Install()
         {
-            if (IsTaskRunning) return;
+            if (true == IsTaskRunning) return;
 
             _task = Spawn(NpmExecutable, "install", true);
             if (null == _task) return;
@@ -119,7 +120,7 @@ namespace O2un.DEV
         /// <summary>실행 중인 서버에 소켓 2개로 붙어 방 생성·참가·이탈을 왕복시킨다.</summary>
         public static void Diagnose()
         {
-            if (IsTaskRunning) return;
+            if (true == IsTaskRunning) return;
 
             if (false == IsRunning)
             {
@@ -143,16 +144,23 @@ namespace O2un.DEV
         private static void Readopt()
         {
             int pid = SessionState.GetInt(PidKey, 0);
-            if (0 == pid) return;
+            string startTicksText = SessionState.GetString(PidStartTicksKey, string.Empty);
+
+            if (0 == pid || false == long.TryParse(startTicksText, out long startTicks))
+            {
+                Forget();
+                return;
+            }
 
             try
             {
                 var process = Process.GetProcessById(pid);
 
-                // PID 는 재사용된다. 남의 프로세스를 잡고 죽이면 안 된다.
-                if (false == process.ProcessName.StartsWith("node", StringComparison.OrdinalIgnoreCase))
+                if (false == process.ProcessName.StartsWith("node", StringComparison.OrdinalIgnoreCase)
+                    || startTicks != process.StartTime.ToUniversalTime().Ticks)
                 {
-                    SessionState.EraseInt(PidKey);
+                    process.Dispose();
+                    Forget();
                     return;
                 }
 
@@ -161,8 +169,20 @@ namespace O2un.DEV
             }
             catch (Exception)
             {
-                SessionState.EraseInt(PidKey);
+                Forget();
             }
+        }
+
+        private static void Remember(Process process)
+        {
+            SessionState.SetInt(PidKey, process.Id);
+            SessionState.SetString(PidStartTicksKey, process.StartTime.ToUniversalTime().Ticks.ToString());
+        }
+
+        private static void Forget()
+        {
+            SessionState.EraseInt(PidKey);
+            SessionState.EraseString(PidStartTicksKey);
         }
 
         private static bool IsPortInUse(int port)
@@ -217,7 +237,7 @@ namespace O2un.DEV
                 RedirectStandardError = pipeOutput
             };
 
-            if (pipeOutput)
+            if (true == pipeOutput)
             {
                 info.StandardOutputEncoding = Encoding.UTF8;
                 info.StandardErrorEncoding = Encoding.UTF8;
@@ -227,7 +247,7 @@ namespace O2un.DEV
             {
                 var process = new Process { StartInfo = info, EnableRaisingEvents = true };
 
-                if (pipeOutput)
+                if (true == pipeOutput)
                 {
                     process.OutputDataReceived += (_, e) => Enqueue(e.Data);
                     process.ErrorDataReceived += (_, e) => Enqueue(e.Data);
@@ -235,7 +255,7 @@ namespace O2un.DEV
 
                 process.Start();
 
-                if (pipeOutput)
+                if (true == pipeOutput)
                 {
                     process.BeginOutputReadLine();
                     process.BeginErrorReadLine();
@@ -288,7 +308,7 @@ namespace O2un.DEV
         // 파이프 콜백은 워커 스레드에서 온다. 큐에만 넣고 메인 스레드에서 꺼낸다.
         private static void Enqueue(string line)
         {
-            if (string.IsNullOrEmpty(line)) return;
+            if (true == string.IsNullOrEmpty(line)) return;
             Pending.Enqueue(line);
         }
 
@@ -302,11 +322,11 @@ namespace O2un.DEV
         private static void WatchServerExit()
         {
             if (false == _expectServerAlive) return;
-            if (IsAlive(_server)) return;
+            if (true == IsAlive(_server)) return;
 
             _expectServerAlive = false;
             _server = null;
-            SessionState.EraseInt(PidKey);
+            Forget();
 
             Append("서버가 스스로 종료됐습니다. 위 로그에서 원인을 확인하세요.");
         }
@@ -340,10 +360,10 @@ namespace O2un.DEV
 
         private static void Drain()
         {
-            if (Pending.IsEmpty) return;
+            if (true == Pending.IsEmpty) return;
 
             while (Pending.TryDequeue(out string line)) Buffer.Add(line);
-            if (Buffer.Count > MaxLines) Buffer.RemoveRange(0, Buffer.Count - MaxLines);
+            if (MaxLines < Buffer.Count) Buffer.RemoveRange(0, Buffer.Count - MaxLines);
 
             OnLogChanged?.Invoke();
         }

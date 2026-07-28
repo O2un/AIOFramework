@@ -70,9 +70,13 @@ function waitFor(ws, event, ms = 2000) {
         const missing = await waitFor(guest, 'joinRoomResult');
         check('없는 방은 ROOM_NOT_FOUND', 'ROOM_NOT_FOUND' === missing.data.error);
 
+        send(guest, 'joinRoom', { roomCode: 123 });
+        const invalid = await waitFor(guest, 'joinRoomResult');
+        check('잘못된 방 코드 타입은 요청만 거절한다', 'INVALID_ROOM_CODE' === invalid.data.error);
+
         send(guest, 'echo', { ping: 1 });
         const echoed = await waitFor(guest, 'echoResult');
-        check('매치메이킹과 무관한 이벤트도 같은 파서로 왕복', 1 === echoed.data.ping);
+        check('잘못된 요청 뒤에도 서버가 계속 응답한다', 1 === echoed.data.ping);
 
         send(guest, 'roomList', {});
         const list = await waitFor(guest, 'roomListResult');

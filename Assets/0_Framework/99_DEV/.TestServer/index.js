@@ -56,7 +56,12 @@ function dispatch(ws, raw) {
         return;
     }
 
-    handler(ws, packet.data ?? {});
+    try {
+        handler(ws, packet.data ?? {});
+    } catch (e) {
+        log(`이벤트 처리 실패: ${packet.event} — ${e.message}`);
+        send(ws, `${packet.event}Result`, { success: false, error: 'INVALID_REQUEST' });
+    }
 }
 
 // ── 모듈 ──────────────────────────────────────────────────────────
