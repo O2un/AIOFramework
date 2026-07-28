@@ -1,14 +1,19 @@
 using System;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Cysharp.Threading.Tasks;
 using O2un.Core.Utils;
 
 namespace O2un.Core.Network
 {
+    /// <summary>
+    /// 전송 통로·용도와 무관하게 모든 JSON 패킷이 쓰는 공통 봉투.
+    /// </summary>
     public struct NetworkPacket<T>
     {
-        public string Event { get; set; }
-        public T Data { get; set; }
+        // 기본 직렬화는 PascalCase 라, 명시하지 않으면 보내는 쪽만 조용히 어긋난다.
+        [JsonPropertyName("event")] public string Event { get; set; }
+        [JsonPropertyName("data")] public T Data { get; set; }
     }
 
     public sealed class NetworkManager : EngineSubsystemBase
