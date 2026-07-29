@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using O2un.Core.Utils;
 using R3;
 using VContainer.Unity;
 
@@ -68,7 +69,17 @@ namespace O2un.Core.Network
             }
             catch
             {
+                try
+                {
+                    await module.DisconnectAsync(CancellationToken.None);
+                }
+                catch (Exception e)
+                {
+                    Log.Print(Log.LogLevel.Error, $"[NetcodeConnectionCoordinator] 연결 실패 정리 중 오류가 발생했다. error={e.Message}", Log.LogFilter.Server);
+                }
+
                 _active = null;
+                _networkId.Value = 0;
                 throw;
             }
         }

@@ -37,6 +37,7 @@ namespace O2un
 
         private readonly NetcodeSessionRuntime _session = new();
         private NetworkRuntimeData _config;
+        private bool _isConnectionProcessing;
 
         public INetcodeSessionSource Session => _session;
 
@@ -92,10 +93,13 @@ namespace O2un
 
         private async UniTask<bool> RunAsync(NetcodeSessionState matchmakingState, Func<CancellationToken, UniTask<MatchmakingResult<MatchConnectionInfo>>> request, CancellationToken ct)
         {
-            if (true == _coordinator.HasActiveConnection)
+            if (true == _isConnectionProcessing || true == _coordinator.HasActiveConnection)
             {
                 return false;
             }
+
+            _isConnectionProcessing = true;
+            var isConnected = false;
 
             try
             {
@@ -127,12 +131,12 @@ namespace O2un
                 if (false == await WaitForNetworkIdAsync(ct))
                 {
                     _session.Set(NetcodeSessionState.Failed);
-                    await _coordinator.DisconnectAsync(ct);
                     return false;
                 }
 
                 _session.Set(NetcodeSessionState.Connected);
                 _session.Set(NetcodeSessionState.InLobby);
+                isConnected = true;
 
                 return true;
             }
@@ -147,6 +151,22 @@ namespace O2un
                 Log.Print(Log.LogLevel.Error, $"[MultiplayerManager] 연결 실패. error={e.Message}", Log.LogFilter.Server);
                 _session.Set(NetcodeSessionState.Failed);
                 return false;
+            }
+            finally
+            {
+                try
+                {
+                    if (false == isConnected && true == _coordinator.HasActiveConnection)
+                    {
+                        await _coordinator.DisconnectAsync(CancellationToken.None);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Print(Log.LogLevel.Error, $"[MultiplayerManager] 연결 실패 정리 중 오류가 발생했다. error={e.Message}", Log.LogFilter.Server);
+                }
+
+                _isConnectionProcessing = false;
             }
         }
 

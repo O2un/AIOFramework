@@ -8,8 +8,8 @@ namespace O2un.Core.Network
         public const string SERVER_WORLD_NAME = "O2unServerWorld";
         public const string CLIENT_WORLD_NAME = "O2unClientWorld";
 
-        public World GetServerWorld() => Find(WorldFlags.GameServer);
-        public World GetClientWorld() => Find(WorldFlags.GameClient);
+        public World GetServerWorld() => ClientServerBootstrap.ServerWorld;
+        public World GetClientWorld() => ClientServerBootstrap.ClientWorld;
 
         public World CreateServerWorld(string name)
         {
@@ -42,24 +42,6 @@ namespace O2un.Core.Network
         {
             DisposeClientWorld();
             DisposeServerWorld();
-        }
-
-        private static World Find(WorldFlags flags)
-        {
-            foreach (var world in World.All)
-            {
-                if (false == world.IsCreated)
-                {
-                    continue;
-                }
-
-                if (0 != (world.Flags & flags))
-                {
-                    return world;
-                }
-            }
-
-            return null;
         }
 
         private static void Dispose(World world)
