@@ -8,10 +8,7 @@
         "R3.Unity",
         "VContainer",
         "Unity.Addressables",
-        "Unity.ResourceManager",
-        "Unity.NetCode",
-        "Unity.Entities",
-        "Unity.Collections"
+        "Unity.ResourceManager"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

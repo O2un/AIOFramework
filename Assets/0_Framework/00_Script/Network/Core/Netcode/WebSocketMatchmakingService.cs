@@ -4,10 +4,11 @@ using Cysharp.Threading.Tasks;
 using O2un.Core.Data;
 using O2un.Core.Utils;
 using R3;
+using VContainer.Unity;
 
 namespace O2un.Core.Network
 {
-    public sealed class WebSocketMatchmakingService : SafeDisposableClass, IMatchmakingService
+    public sealed class WebSocketMatchmakingService : SafeDisposableClass, IMatchmakingService, IInitializable
     {
         private readonly INetworkMessenger _messenger;
         private readonly IRuntimeDataProvider _dataProvider;
@@ -28,10 +29,9 @@ namespace O2un.Core.Network
         {
             _messenger = messenger;
             _dataProvider = dataProvider;
-            Init();
         }
 
-        private void Init()
+        public void Initialize()
         {
             _config = _dataProvider.Get<NetworkRuntimeData>();
 

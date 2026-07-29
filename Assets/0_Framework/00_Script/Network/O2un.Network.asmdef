@@ -5,6 +5,7 @@
         "O2un.Core",
         "UniTask",
         "R3.Unity",
+        "VContainer",
         "Unity.NetCode",
         "Unity.Entities",
         "Unity.Collections",
