@@ -56,6 +56,7 @@ namespace O2un.Core.Network
 
         // 서버 푸시(SessionClosedNotice) 사유라 Ack 와 경로가 다르고 이 필터를 타지 않는다.
         public const string HOST_LEFT = "HOST_LEFT";
+        public const string CONNECTION_LOST = "CONNECTION_LOST";
 
         private static readonly HashSet<string> PUBLIC_REASONS = new(StringComparer.Ordinal)
         {

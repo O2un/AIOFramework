@@ -33,6 +33,10 @@ namespace O2un.Core.Network
             _messenger.Observe<SessionClosedNotice>(MatchmakingEvents.SESSION_CLOSED)
                 .Subscribe(HandleSessionClosed)
                 .AddTo(DisposableR3);
+            _messenger.IsConnected
+                .Where(isConnected => false == isConnected)
+                .Subscribe(_ => HandleDisconnected())
+                .AddTo(DisposableR3);
         }
 
         protected override void SafeDispose()
@@ -208,6 +212,22 @@ namespace O2un.Core.Network
             }
 
             _sessionClosed.OnNext(notice);
+        }
+
+        private void HandleDisconnected()
+        {
+            var connection = CurrentConnection;
+            if (null == connection)
+            {
+                return;
+            }
+
+            CurrentConnection = null;
+            _sessionClosed.OnNext(new SessionClosedNotice
+            {
+                SessionId = connection.SessionId,
+                Reason = MatchmakingReasons.CONNECTION_LOST,
+            });
         }
     }
 }
