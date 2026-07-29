@@ -3,7 +3,6 @@ using O2un.Core.Data;
 using O2un.Core.Events;
 using O2un.Core.Network;
 using O2un.Core.Utils;
-using O2un.Pooling;
 using VContainer;
 using VContainer.Unity;
 
@@ -13,10 +12,9 @@ namespace O2un.DI
     {
         protected override void Configure(IContainerBuilder builder)
         {
-            builder.Register<UIEventBus>(Lifetime.Singleton).As<IUIEventPublisher, IUIEventSubscriber>();
+            builder.Register<UIEventBus>(Lifetime.Singleton).AsImplementedInterfaces();
 
             builder.Register<LogManager>(Lifetime.Singleton).AsImplementedInterfaces();
-            builder.Register<PoolingManager>(Lifetime.Singleton).AsImplementedInterfaces();
             builder.Register<NetworkManager>(Lifetime.Singleton).AsImplementedInterfaces();
             builder.Register<SceneManager>(Lifetime.Singleton).AsImplementedInterfaces();
             builder.Register<WebSocketMatchmakingService>(Lifetime.Singleton).AsImplementedInterfaces();
@@ -29,8 +27,8 @@ namespace O2un.DI
 
         private void RegisterProviders(IContainerBuilder builder)
         {
-            builder.Register<LoadingProvider>(Lifetime.Singleton).As<ILoadingProvider>();
-            builder.Register<RuntimeDataProvider>(Lifetime.Singleton).As<IRuntimeDataProvider>();
+            builder.Register<LoadingProvider>(Lifetime.Singleton).AsImplementedInterfaces();
+            builder.Register<RuntimeDataProvider>(Lifetime.Singleton).AsImplementedInterfaces();
         }
     }
 }
