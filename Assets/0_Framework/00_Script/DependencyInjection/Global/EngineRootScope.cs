@@ -15,10 +15,11 @@ namespace O2un.DI
         {
             builder.Register<UIEventBus>(Lifetime.Singleton).As<IUIEventPublisher, IUIEventSubscriber>();
 
-            builder.Register<LogManager>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
-            builder.Register<PoolingManager>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
-            builder.Register<NetworkManager>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
-            builder.Register<SceneManager>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
+            builder.Register<LogManager>(Lifetime.Singleton).AsImplementedInterfaces();
+            builder.Register<PoolingManager>(Lifetime.Singleton).AsImplementedInterfaces();
+            builder.Register<NetworkManager>(Lifetime.Singleton).AsImplementedInterfaces();
+            builder.Register<SceneManager>(Lifetime.Singleton).AsImplementedInterfaces();
+            builder.Register<WebSocketMatchmakingService>(Lifetime.Singleton).AsImplementedInterfaces();
 
             RegisterProviders(builder);
 

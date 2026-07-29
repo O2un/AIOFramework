@@ -11,10 +11,10 @@ namespace O2un.DI
     public class EngineBootStrapper : IAsyncStartable
     {
         private readonly IEnumerable<IAsyncReady> _engineSubsystems;
-        private readonly SceneManager _sceneManager;
+        private readonly ISceneManager _sceneManager;
 
         [Inject]
-        public EngineBootStrapper(IEnumerable<IAsyncReady> engineSubsystems,SceneManager sceneManager)
+        public EngineBootStrapper(IEnumerable<IAsyncReady> engineSubsystems, ISceneManager sceneManager)
         {
             _engineSubsystems = engineSubsystems;
             _sceneManager = sceneManager;

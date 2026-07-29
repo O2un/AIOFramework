@@ -20,7 +20,7 @@ namespace O2un.Core.Network
         [JsonPropertyName("data")] public T Data { get; set; }
     }
 
-    public sealed class NetworkManager : EngineSubsystemBase
+    public sealed class NetworkManager : EngineSubsystemBase, INetworkMessenger
     {
         private const string ACK_POSTFIX = "Ack";
         private const string CONNECTION_READY_EVENT = "connectionReady";
@@ -89,7 +89,10 @@ namespace O2un.Core.Network
 
         private async UniTask<bool> SendDataAsync<T>(string eventName, ulong uniqueKey, T data, CancellationToken ct)
         {
-            if (false == _isConnected.Value) return false;
+            if (false == _isConnected.Value)
+            {
+                return false;
+            }
 
             byte[] bytes;
 
@@ -116,7 +119,10 @@ namespace O2un.Core.Network
 
             try
             {
-                if (false == _isConnected.Value) return false;
+                if (false == _isConnected.Value)
+                {
+                    return false;
+                }
 
                 return await _client.SendAsync(bytes, ct: ct);
             }
@@ -134,10 +140,12 @@ namespace O2un.Core.Network
         /// <summary>
         /// 응답을 받지 못하면 null 이다. "서버가 거절함"은 null 이 아니라 응답 본문의 실패 플래그로 온다.
         /// </summary>
-        public async UniTask<TResponse> SendDataAndWaitAsync<TRequest, TResponse>(string eventName, TRequest data, CancellationToken ct = default)
-            where TResponse : class
+        public async UniTask<TResponse> SendDataAndWaitAsync<TRequest, TResponse>(string eventName, TRequest data, CancellationToken ct = default) where TResponse : class
         {
-            if (false == _isConnected.Value) return null;
+            if (false == _isConnected.Value)
+            {
+                return null;
+            }
 
             string waitEventName = string.Concat(eventName, ACK_POSTFIX);
             ulong uniqueKey = CreateUniqueKey();
@@ -148,7 +156,10 @@ namespace O2un.Core.Network
             try
             {
                 bool isSent = await SendDataAsync(eventName, uniqueKey, data, ct);
-                if (false == isSent) return null;
+                if (false == isSent)
+                {
+                    return null;
+                }
 
                 var timeoutTask = UniTask.Delay(TimeSpan.FromSeconds(_config.TimeoutSeconds), cancellationToken: ct);
                 var (isResponseReceived, response) = await UniTask.WhenAny(waitTask, timeoutTask);
@@ -212,22 +223,43 @@ namespace O2un.Core.Network
             using var document = JsonDocument.Parse(rawData);
             JsonElement root = document.RootElement;
 
-            if (JsonValueKind.Object != root.ValueKind) return false;
+            if (JsonValueKind.Object != root.ValueKind)
+            {
+                return false;
+            }
 
-            if (false == root.TryGetProperty("event", out JsonElement eventElement)) return false;
-            if (JsonValueKind.String != eventElement.ValueKind) return false;
+            if (false == root.TryGetProperty("event", out JsonElement eventElement))
+            {
+                return false;
+            }
+            if (JsonValueKind.String != eventElement.ValueKind)
+            {
+                return false;
+            }
 
             eventName = eventElement.GetString();
-            if (string.IsNullOrEmpty(eventName)) return false;
+            if (string.IsNullOrEmpty(eventName))
+            {
+                return false;
+            }
 
             if (root.TryGetProperty("uniqueKey", out JsonElement uniqueKeyElement))
             {
-                if (JsonValueKind.String != uniqueKeyElement.ValueKind) return false;
-                if (false == ulong.TryParse(uniqueKeyElement.GetString(), NumberStyles.None, CultureInfo.InvariantCulture, out ulong parsedUniqueKey)) return false;
+                if (JsonValueKind.String != uniqueKeyElement.ValueKind)
+                {
+                    return false;
+                }
+                if (false == ulong.TryParse(uniqueKeyElement.GetString(), NumberStyles.None, CultureInfo.InvariantCulture, out ulong parsedUniqueKey))
+                {
+                    return false;
+                }
                 uniqueKey = parsedUniqueKey;
             }
 
-            if (false == root.TryGetProperty("data", out JsonElement dataElement)) return false;
+            if (false == root.TryGetProperty("data", out JsonElement dataElement))
+            {
+                return false;
+            }
 
             // JsonDocument 를 여기서 버리므로 Clone 없이 넘기면 해제된 메모리를 읽는다.
             payload = dataElement.Clone();
