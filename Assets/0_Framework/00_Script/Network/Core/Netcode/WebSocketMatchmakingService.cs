@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using O2un.Core.Data;
 using O2un.Core.Utils;
 using R3;
 
@@ -9,7 +10,8 @@ namespace O2un.Core.Network
     public sealed class WebSocketMatchmakingService : SafeDisposableClass, IMatchmakingService
     {
         private readonly INetworkMessenger _messenger;
-        private readonly NetworkSystemConfig _config;
+        private readonly IRuntimeDataProvider _dataProvider;
+        private NetworkRuntimeData _config;
 
         private readonly Subject<MatchConnectionInfo> _matchAssigned = new();
         private readonly Subject<RoomState> _roomUpdated = new();
@@ -22,10 +24,16 @@ namespace O2un.Core.Network
         public Observable<RoomState> RoomUpdated => _roomUpdated;
         public Observable<SessionClosedNotice> SessionClosed => _sessionClosed;
 
-        public WebSocketMatchmakingService(INetworkMessenger messenger)
+        public WebSocketMatchmakingService(INetworkMessenger messenger, IRuntimeDataProvider dataProvider)
         {
             _messenger = messenger;
-            _config = NetworkSystemConfig.LoadRuntime();
+            _dataProvider = dataProvider;
+            Init();
+        }
+
+        private void Init()
+        {
+            _config = _dataProvider.Get<NetworkRuntimeData>();
 
             _messenger.Observe<RoomState>(MatchmakingEvents.ROOM_UPDATED)
                 .Subscribe(HandleRoomUpdated)
@@ -80,8 +88,8 @@ namespace O2un.Core.Network
                 PlayerId = playerId,
                 MaxPlayers = maxPlayers,
 
-                // 포트는 화면이 정할 값이 아니다. 호스트가 Listen 할 로컬 설정이라 Config 에서 읽는다.
-                Port = (ushort)_config.NetCode,
+                // 포트는 화면이 정할 값이 아니다. 호스트가 Listen 할 로컬 설정에서 읽는다.
+                Port = _config.MultiplayerPort,
             };
 
             var ack = await _messenger.SendDataAndWaitAsync<CreateRoomReq, CreateRoomAck>(MatchmakingEvents.CREATE_ROOM, request, ct);

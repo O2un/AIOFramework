@@ -12,7 +12,7 @@ namespace O2un.Core.Network
     /// </summary>
     public sealed class NetworkClient : SafeDisposableClass
     {
-        private readonly NetworkSystemConfig _config;
+        private readonly NetworkRuntimeData _config;
         private WebSocketClient _webSocket;
 
         private bool _isReconnecting;
@@ -26,7 +26,7 @@ namespace O2un.Core.Network
         public Observable<Unit> OnDisconnected => _onDisconnected;
         public Observable<ReadOnlyMemory<byte>> OnRawMessageReceived => _onRawMessageReceived;
 
-        public NetworkClient(NetworkSystemConfig config)
+        public NetworkClient(NetworkRuntimeData config)
         {
             _config = config;
             _webSocketSubscriptions.AddTo(DisposableR3);

@@ -8,11 +8,6 @@ namespace O2un.Core.Data
     /// <summary>
     /// 런타임 데이터를 타입당 하나만 만들어 캐시한다. 같은 JSON 파일을 여러 인스턴스가 따로 들고 서로 덮어쓰는 것을 막는다.
     /// </summary>
-    public interface IRuntimeDataProvider
-    {
-        T Get<T>() where T : RuntimeData<T>, new();
-    }
-
     public sealed class RuntimeDataProvider : EngineSubsystemBase, IRuntimeDataProvider
     {
         private readonly Dictionary<Type, IRuntimeData> _dataMap = new();

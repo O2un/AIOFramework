@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using O2un.Core.Data;
 using O2un.Core.Utils;
 using R3;
 
@@ -33,7 +34,8 @@ namespace O2un.Core.Network
         private readonly SemaphoreSlim _sendLock = new(1, 1);
         private readonly object _uniqueKeyLock = new();
 
-        private NetworkSystemConfig _config;
+        private readonly IRuntimeDataProvider _dataProvider;
+        private NetworkRuntimeData _config;
         private NetworkClient _client;
         private NetworkRouter _router;
         private NetworkRequestTracker _requestTracker;
@@ -42,9 +44,14 @@ namespace O2un.Core.Network
         private readonly ReactiveProperty<bool> _isConnected = new(false);
         public ReadOnlyReactiveProperty<bool> IsConnected => _isConnected;
 
+        public NetworkManager(IRuntimeDataProvider dataProvider)
+        {
+            _dataProvider = dataProvider;
+        }
+
         protected override async UniTask InitAsync()
         {
-            _config = NetworkSystemConfig.LoadRuntime();
+            _config = _dataProvider.Get<NetworkRuntimeData>();
 
             _router = new NetworkRouter();
             _requestTracker = new NetworkRequestTracker();
