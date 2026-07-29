@@ -1,43 +1,57 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
+using R3;
 
 namespace O2un.Core.Network
 {
-    public sealed class NetworkRouter
+    /// <summary>
+    /// 서버 푸시 라우터. 응답 타입은 구독 시점에만 알 수 있으므로 핸들러를 JsonElement 래퍼로 감싸 보관한다.
+    /// </summary>
+    public sealed class NetworkRouter : SafeDisposableClass
     {
-        private readonly Dictionary<string, Delegate> _eventHandlers = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, Subject<JsonElement>> _eventSubjects = new(StringComparer.Ordinal);
 
-        public void Subscribe<T>(string eventName, Action<T> handler)
+        public Observable<T> Observe<T>(string eventName)
         {
-            if (!_eventHandlers.ContainsKey(eventName))
-                _eventHandlers[eventName] = handler;
-            else
-                _eventHandlers[eventName] = Delegate.Combine(_eventHandlers[eventName], handler);
+            return GetSubject(eventName).Select(payload => payload.CommonOptionDeserialize<T>());
         }
 
-        public void Unsubscribe<T>(string eventName, Action<T> handler)
+        public Observable<T> Observe<T>(string eventName, Func<JsonElement, T> parser)
         {
-            if (_eventHandlers.TryGetValue(eventName, out var existingHandler))
+            return GetSubject(eventName).Select(parser);
+        }
+
+        public void Route(string eventName, JsonElement payload)
+        {
+            if (false == _eventSubjects.TryGetValue(eventName, out var subject))
             {
-                var newHandler = Delegate.Remove(existingHandler, handler);
-                if (newHandler == null)
-                    _eventHandlers.Remove(eventName);
-                else
-                    _eventHandlers[eventName] = newHandler;
+                return;
             }
+
+            subject.OnNext(payload);
         }
 
-        public void Route<T>(string eventName, T data)
+        protected override void SafeDispose()
         {
-            if (_eventHandlers.TryGetValue(eventName, out var handler) && handler is Action<T> action)
+            foreach (var subject in _eventSubjects.Values)
             {
-                action.Invoke(data);
+                subject.Dispose();
             }
+
+            _eventSubjects.Clear();
         }
 
-        public void Clear()
+        private Subject<JsonElement> GetSubject(string eventName)
         {
-            _eventHandlers.Clear();
+            if (_eventSubjects.TryGetValue(eventName, out var subject))
+            {
+                return subject;
+            }
+
+            var created = new Subject<JsonElement>();
+            _eventSubjects.Add(eventName, created);
+            return created;
         }
     }
 }

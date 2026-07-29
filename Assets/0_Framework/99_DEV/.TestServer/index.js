@@ -22,13 +22,34 @@ function log(line) {
 const handlers = new Map();
 const disconnectHandlers = [];
 const clients = new Map();
+const UINT64_MAX = BigInt('18446744073709551615');
 
 const on = (event, handler) => handlers.set(event, handler);
 const onDisconnect = (handler) => disconnectHandlers.push(handler);
 
-function send(ws, event, data) {
+function newClientId() {
+    for (;;) {
+        const clientId = crypto.randomUUID();
+        if (false === clients.has(clientId)) return clientId;
+    }
+}
+
+function normalizeUniqueKey(value) {
+    if ('string' !== typeof value || false === /^(0|[1-9]\d*)$/.test(value)) return null;
+
+    try {
+        return BigInt(value) <= UINT64_MAX ? value : null;
+    } catch {
+        return null;
+    }
+}
+
+function send(ws, event, data, uniqueKey = null) {
     if (WebSocket.OPEN !== ws.readyState) return;
-    ws.send(JSON.stringify({ event, data }));
+
+    const packet = { event, data };
+    if (null !== uniqueKey) packet.uniqueKey = uniqueKey;
+    ws.send(JSON.stringify(packet));
 }
 
 function hostAddress(ws) {
@@ -56,11 +77,18 @@ function dispatch(ws, raw) {
         return;
     }
 
+    const uniqueKey = normalizeUniqueKey(packet.uniqueKey);
+    if (null === uniqueKey) {
+        log(`잘못된 uniqueKey: ${packet.event} — ${packet.uniqueKey}`);
+        send(ws, `${packet.event}Ack`, { isSuccess: false, reason: 'INVALID_UNIQUE_KEY' });
+        return;
+    }
+
     try {
-        handler(ws, packet.data ?? {});
+        handler(ws, packet.data ?? {}, uniqueKey);
     } catch (e) {
         log(`이벤트 처리 실패: ${packet.event} — ${e.message}`);
-        send(ws, `${packet.event}Result`, { success: false, error: 'INVALID_REQUEST' });
+        send(ws, `${packet.event}Ack`, { isSuccess: false, reason: 'INVALID_REQUEST' }, uniqueKey);
     }
 }
 
@@ -68,13 +96,13 @@ function dispatch(ws, raw) {
 
 require('./matchmakingServer').register({ on, onDisconnect, send, log, clients });
 
-on('login', (ws) => {
-    send(ws, 'loginResult', { success: true, clientId: ws.ctx.clientId, token: 'test_token_12345' });
+on('login', (ws, data, uniqueKey) => {
+    send(ws, 'loginAck', { isSuccess: true, reason: null, token: 'test_token_12345' }, uniqueKey);
 });
 
 // 매치메이킹과 무관한 이벤트. 왕복하면 봉투가 용도에서 떨어진 것이다 (PRD-01 완료 기준).
-on('echo', (ws, data) => {
-    send(ws, 'echoResult', { ...data, serverTime: new Date().toISOString() });
+on('echo', (ws, data, uniqueKey) => {
+    send(ws, 'echoAck', { ...data, serverTime: new Date().toISOString() }, uniqueKey);
 });
 
 // ── 서버 ──────────────────────────────────────────────────────────
@@ -90,15 +118,15 @@ wss.on('error', (err) => {
     process.exit(1);
 });
 
-wss.on('connection', (ws, req) => {
-    const url = new URL(req.url, `http://${req.headers.host}`);
-    const clientId = url.searchParams.get('clientId') ?? crypto.randomUUID();
+wss.on('connection', (ws) => {
+    const clientId = newClientId();
 
     ws.ctx = { clientId, address: hostAddress(ws) };
     clients.set(clientId, ws);
     log(`연결: ${clientId}`);
 
     ws.on('message', raw => dispatch(ws, raw));
+    send(ws, 'connectionReady', { isReady: true });
 
     ws.on('close', () => {
         for (const handler of disconnectHandlers) handler(ws);

@@ -10,11 +10,16 @@ namespace O2un.Core.Network
 
     public static class NetworkJson
     {
-        public static readonly JsonSerializerOptions Options = new() 
-        { 
-            PropertyNameCaseInsensitive = true, 
+        public static readonly JsonSerializerOptions Options = new()
+        {
+            // 보내는 쪽 정책. C# 프로퍼티는 PascalCase 인데 서버는 camelCase 를 읽으므로 정책 없이는 안쪽이 어긋난다.
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true,
             NumberHandling = JsonNumberHandling.AllowReadingFromString,
             IncludeFields = true,
+
+            // MultiplayerRole 이 문자열로 오간다. 컨버터가 없으면 숫자만 읽어 서버 응답이 조용히 None 이 된다.
+            Converters = { new JsonStringEnumConverter() },
         };
 
         public static T CommonOptionDeserialize<T>(this JsonElement element)

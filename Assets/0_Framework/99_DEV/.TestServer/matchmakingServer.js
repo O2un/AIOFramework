@@ -6,7 +6,14 @@ const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const rooms = new Map();
 const roomOf = new Map();
 
+// 방 소속은 소켓을 찾을 수 있는 clientId 로 들고, DTO 로 나갈 때만 playerId 로 바꾼다.
+const playerIdOf = new Map();
+
 let server = null;
+
+const isPlayerId = (value) => 'string' === typeof value && 0 < value.trim().length;
+const isPort = (value) => Number.isInteger(value) && 0 < value && 65535 >= value;
+const isMaxPlayers = (value) => Number.isInteger(value) && 0 < value && 2147483647 >= value;
 
 function newRoomCode() {
     for (;;) {
@@ -16,15 +23,38 @@ function newRoomCode() {
     }
 }
 
+const playerIdFor = (clientId) => playerIdOf.get(clientId) ?? clientId;
+
+function connectionOf(room, role) {
+    return {
+        sessionId: room.sessionId,
+        roomCode: room.roomCode,
+        role,
+        address: room.address,
+        port: room.port,
+        // connectionToken 은 발급만 하고 검증하지 않는다 (PRD-02 범위 밖).
+        connectionToken: crypto.randomUUID()
+    };
+}
+
 function stateOf(room) {
     return {
         roomCode: room.roomCode,
-        sessionId: room.sessionId,
-        hostClientId: room.hostClientId,
-        address: room.address,
-        port: room.port,
+        hostPlayerId: playerIdFor(room.hostClientId),
+        players: room.players.map(clientId => ({
+            playerId: playerIdFor(clientId),
+            isHost: clientId === room.hostClientId
+        }))
+    };
+}
+
+function summaryOf(room) {
+    return {
+        roomCode: room.roomCode,
+        hostPlayerId: playerIdFor(room.hostClientId),
+        currentPlayers: room.players.length,
         maxPlayers: room.maxPlayers,
-        players: [...room.players]
+        isJoinable: room.players.length < room.maxPlayers
     };
 }
 
@@ -40,6 +70,7 @@ function leave(ws) {
     const clientId = ws.ctx.clientId;
     const roomCode = roomOf.get(clientId);
     roomOf.delete(clientId);
+    playerIdOf.delete(clientId);
 
     const room = roomCode ? rooms.get(roomCode) : null;
     if (!room) return;
@@ -53,7 +84,7 @@ function leave(ws) {
             roomOf.delete(memberId);
 
             const target = server.clients.get(memberId);
-            if (target) server.send(target, 'sessionClosed', { roomCode: room.roomCode, reason: 'HOST_LEFT' });
+            if (target) server.send(target, 'sessionClosed', { sessionId: room.sessionId, reason: 'HOST_LEFT' });
         }
 
         server.log(`방 파기: ${room.roomCode} (호스트 이탈)`);
@@ -61,11 +92,26 @@ function leave(ws) {
     }
 
     room.players = room.players.filter(id => id !== clientId);
-    broadcast(room, 'roomState', stateOf(room));
+    broadcast(room, 'roomUpdated', stateOf(room));
     server.log(`방 이탈: ${room.roomCode} ← ${clientId} (${room.players.length}/${room.maxPlayers})`);
 }
 
-function createRoom(ws, data) {
+function createRoom(ws, data, uniqueKey) {
+    if (false === isPlayerId(data.playerId)) {
+        server.send(ws, 'createRoomAck', { isSuccess: false, reason: 'INVALID_PLAYER_ID', connection: null }, uniqueKey);
+        return;
+    }
+
+    if (false === isPort(data.port)) {
+        server.send(ws, 'createRoomAck', { isSuccess: false, reason: 'INVALID_PORT', connection: null }, uniqueKey);
+        return;
+    }
+
+    if (false === isMaxPlayers(data.maxPlayers)) {
+        server.send(ws, 'createRoomAck', { isSuccess: false, reason: 'INVALID_MAX_PLAYERS', connection: null }, uniqueKey);
+        return;
+    }
+
     const ctx = ws.ctx;
     if (roomOf.has(ctx.clientId)) leave(ws);
 
@@ -75,33 +121,38 @@ function createRoom(ws, data) {
         hostClientId: ctx.clientId,
         address: ctx.address,
         port: data.port,
-        maxPlayers: data.maxPlayers ?? 4,
+        maxPlayers: data.maxPlayers,
         players: [ctx.clientId]
     };
 
     rooms.set(room.roomCode, room);
     roomOf.set(ctx.clientId, room.roomCode);
+    playerIdOf.set(ctx.clientId, data.playerId);
 
-    // connectionToken 은 발급만 하고 검증하지 않는다 (PRD-01 범위 밖).
-    server.send(ws, 'createRoomResult', { success: true, connectionToken: crypto.randomUUID(), ...stateOf(room) });
+    server.send(ws, 'createRoomAck', { isSuccess: true, reason: null, connection: connectionOf(room, 'Host') }, uniqueKey);
     server.log(`방 생성: ${room.roomCode} @ ${room.address}:${room.port}`);
 }
 
-function joinRoom(ws, data) {
+function joinRoom(ws, data, uniqueKey) {
+    if (false === isPlayerId(data.playerId)) {
+        server.send(ws, 'joinRoomAck', { isSuccess: false, reason: 'INVALID_PLAYER_ID', connection: null }, uniqueKey);
+        return;
+    }
+
     if ('string' !== typeof data.roomCode) {
-        server.send(ws, 'joinRoomResult', { success: false, error: 'INVALID_ROOM_CODE' });
+        server.send(ws, 'joinRoomAck', { isSuccess: false, reason: 'INVALID_ROOM_CODE', connection: null }, uniqueKey);
         return;
     }
 
     const room = rooms.get(data.roomCode.toUpperCase());
 
     if (!room) {
-        server.send(ws, 'joinRoomResult', { success: false, error: 'ROOM_NOT_FOUND' });
+        server.send(ws, 'joinRoomAck', { isSuccess: false, reason: 'ROOM_NOT_FOUND', connection: null }, uniqueKey);
         return;
     }
 
     if (room.players.length >= room.maxPlayers) {
-        server.send(ws, 'joinRoomResult', { success: false, error: 'ROOM_FULL' });
+        server.send(ws, 'joinRoomAck', { isSuccess: false, reason: 'ROOM_FULL', connection: null }, uniqueKey);
         return;
     }
 
@@ -110,27 +161,36 @@ function joinRoom(ws, data) {
 
     if (!room.players.includes(ctx.clientId)) room.players.push(ctx.clientId);
     roomOf.set(ctx.clientId, room.roomCode);
+    playerIdOf.set(ctx.clientId, data.playerId);
 
-    server.send(ws, 'joinRoomResult', { success: true, connectionToken: crypto.randomUUID(), ...stateOf(room) });
-    broadcast(room, 'roomState', stateOf(room));
+    server.send(ws, 'joinRoomAck', { isSuccess: true, reason: null, connection: connectionOf(room, 'Client') }, uniqueKey);
+    broadcast(room, 'roomUpdated', stateOf(room));
     server.log(`방 참가: ${room.roomCode} ← ${ctx.clientId} (${room.players.length}/${room.maxPlayers})`);
 }
 
-function leaveRoom(ws) {
+function leaveRoom(ws, data, uniqueKey) {
+    const roomCode = roomOf.get(ws.ctx.clientId);
+    const room = roomCode ? rooms.get(roomCode) : null;
+
+    if (!room) {
+        server.send(ws, 'leaveRoomAck', { isSuccess: false, reason: 'NOT_IN_ROOM' }, uniqueKey);
+        return;
+    }
+
+    if ('string' !== typeof data.sessionId || room.sessionId !== data.sessionId) {
+        server.send(ws, 'leaveRoomAck', { isSuccess: false, reason: 'SESSION_MISMATCH' }, uniqueKey);
+        return;
+    }
+
     leave(ws);
-    server.send(ws, 'leaveRoomResult', { success: true });
+    server.send(ws, 'leaveRoomAck', { isSuccess: true, reason: null }, uniqueKey);
 }
 
-function roomList(ws) {
-    const list = [...rooms.values()]
-        .filter(room => room.players.length < room.maxPlayers)
-        .map(room => ({
-            roomCode: room.roomCode,
-            playerCount: room.players.length,
-            maxPlayers: room.maxPlayers
-        }));
+// 정원이 찬 방도 내려보낸다. 걸러 버리면 RoomSummary.isJoinable 이 항상 true 인 죽은 필드가 된다.
+function roomList(ws, data, uniqueKey) {
+    const list = [...rooms.values()].map(summaryOf);
 
-    server.send(ws, 'roomListResult', { rooms: list });
+    server.send(ws, 'roomListAck', { isSuccess: true, reason: null, rooms: list }, uniqueKey);
 }
 
 function register(serverApi) {
