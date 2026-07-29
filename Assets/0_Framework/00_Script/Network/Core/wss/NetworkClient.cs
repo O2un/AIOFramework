@@ -71,11 +71,21 @@ namespace O2un.Core.Network
 
         private void HandleRawMessage(ReadOnlyMemory<byte> rawData)
         {
+            if (IsDisposed)
+            {
+                return;
+            }
+
             _onRawMessageReceived.OnNext(rawData);
         }
 
         private void HandleConnected()
         {
+            if (IsDisposed)
+            {
+                return;
+            }
+
             _isReconnecting = false;
             _onConnected.OnNext(Unit.Default);
         }

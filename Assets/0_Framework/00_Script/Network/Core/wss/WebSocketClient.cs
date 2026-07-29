@@ -52,9 +52,13 @@ namespace O2un.Core.Network
                     await ReceiveLoopAsync(innerCt);
                 });
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
-                _onError.OnNext(ex.Message);
+                PublishError(ex.Message);
             }
         }
 
@@ -72,13 +76,17 @@ namespace O2un.Core.Network
             }
             catch (Exception ex)
             {
-                _onError.OnNext(ex.Message);
+                PublishError(ex.Message);
             }
             finally
             {
                 _webSocket.Dispose();
                 _webSocket = null;
-                _onDisconnected.OnNext(string.Empty);
+
+                if (false == IsDisposed)
+                {
+                    _onDisconnected.OnNext(string.Empty);
+                }
             }
         }
 
@@ -124,16 +132,32 @@ namespace O2un.Core.Network
             }
             catch (Exception ex)
             {
-                _onError.OnNext(ex.Message);
+                PublishError(ex.Message);
                 await DisconnectAsync();
             }
         }
 
         private void ProcessMessage(ReadOnlyMemory<byte> message)
         {
+            if (IsDisposed)
+            {
+                return;
+            }
+
             // 수신 버퍼는 다음 루프에서 덮어쓰이는데 구독자는 메인 스레드로 미뤄 실행되므로 복사해서 넘긴다.
             byte[] copy = message.ToArray();
             _onRawMessageReceived.OnNext(copy);
+        }
+
+        // Dispose 는 토큰 취소 뒤에 Subject 를 닫으므로, 취소로 풀린 대기가 닫힌 Subject 로 되돌아온다.
+        private void PublishError(string message)
+        {
+            if (IsDisposed)
+            {
+                return;
+            }
+
+            _onError.OnNext(message);
         }
 
         protected override void SafeDispose()
