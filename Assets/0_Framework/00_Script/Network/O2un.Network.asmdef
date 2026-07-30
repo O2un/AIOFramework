@@ -9,7 +9,9 @@
         "Unity.NetCode",
         "Unity.Entities",
         "Unity.Collections",
-        "Unity.Networking.Transport"
+        "Unity.Networking.Transport",
+        "Unity.Mathematics",
+        "Unity.Burst"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

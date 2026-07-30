@@ -7,7 +7,10 @@
         "O2un.Core",
         "O2un.Network",
         "UniTask",
-        "R3.Unity"
+        "R3.Unity",
+        "Unity.NetCode",
+        "Unity.Entities",
+        "Unity.Collections"
     ],
     "includePlatforms": [
         "Editor"
