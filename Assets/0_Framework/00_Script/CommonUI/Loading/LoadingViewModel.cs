@@ -7,7 +7,8 @@ namespace O2un.UI
 {
     public sealed class LoadingViewModel : ViewModelBase
     {
-        public ReadOnlyReactiveProperty<float> Progress { get; private set; }
+        // Provider 소유라 AddTo 로 물면 안 된다. 이 VM 이 죽을 때 공유 인스턴스가 끊긴다.
+        public ReadOnlyReactiveProperty<float> Progress => _source.Progress;
 
         private readonly ILoadingSource  _source;
         public LoadingViewModel(ILoadingSource  source)
@@ -17,9 +18,6 @@ namespace O2un.UI
 
         public override async UniTask InitAsync()
         {
-            Progress = _source.Progress
-            .AddTo(_disposableR3);
-
             await UniTask.CompletedTask;
         }
 

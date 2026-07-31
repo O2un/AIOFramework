@@ -6,7 +6,12 @@ using O2un.Utils;
 
 namespace O2un.Core
 {
-    public sealed class SceneManager : EngineSubsystemBase
+    public interface ISceneManager : IAsyncReady
+    {
+        UniTask LoadSceneAsync(string targetSceneName);
+    }
+
+    public sealed class SceneManager : EngineSubsystemBase, ISceneManager
     {
         public enum SceneState
         {

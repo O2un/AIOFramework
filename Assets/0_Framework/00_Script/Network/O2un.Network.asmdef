@@ -3,7 +3,15 @@
     "rootNamespace": "O2un.Core.Network",
     "references": [
         "O2un.Core",
-        "UniTask"
+        "UniTask",
+        "R3.Unity",
+        "VContainer",
+        "Unity.NetCode",
+        "Unity.Entities",
+        "Unity.Collections",
+        "Unity.Networking.Transport",
+        "Unity.Mathematics",
+        "Unity.Burst"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
