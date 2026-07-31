@@ -120,9 +120,15 @@ namespace O2un.Core.Network
             RegisterPeer(networkId);
         }
 
-        private void HandlePacketDrained(NetcodeInboundPacketData packet)
+        private void HandlePacketDrained(World world, NetcodeInboundPacketData packet)
         {
             if (true == IsDisposed)
+            {
+                return;
+            }
+
+            // Bridge 는 정적이라 다른 Client World 의 수신까지 흘러온다. 이 Transport 는 자기 World 것만 다룬다.
+            if (world != _clientWorld)
             {
                 return;
             }

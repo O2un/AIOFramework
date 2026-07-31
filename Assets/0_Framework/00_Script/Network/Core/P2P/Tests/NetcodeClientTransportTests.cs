@@ -15,58 +15,6 @@ namespace O2un.Core.Network.Tests
         private const int LOCAL_NETWORK_ID = 3;
         private const int REMOTE_NETWORK_ID = 7;
 
-        private sealed class TestClientWorld : IDisposable
-        {
-            public World World { get; }
-            public ClientSendPacketSystem SendSystem { get; }
-            public ClientReceivePacketSystem ReceiveSystem { get; }
-            public NetcodePacketDrainSystem DrainSystem { get; }
-
-            public TestClientWorld()
-            {
-                World = new World("O2unPacketTestWorld");
-                SendSystem = World.CreateSystemManaged<ClientSendPacketSystem>();
-                ReceiveSystem = World.CreateSystemManaged<ClientReceivePacketSystem>();
-                DrainSystem = World.CreateSystemManaged<NetcodePacketDrainSystem>();
-            }
-
-            public void Dispose()
-            {
-                World.Dispose();
-            }
-
-            public int CountOf<T>() where T : unmanaged, IComponentData
-            {
-                using EntityQuery query = World.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<T>());
-                return query.CalculateEntityCount();
-            }
-
-            public RelayPacketRpc SingleRpc()
-            {
-                using EntityQuery query = World.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<RelayPacketRpc>());
-                using NativeArray<RelayPacketRpc> packets = query.ToComponentDataArray<RelayPacketRpc>(Allocator.Temp);
-
-                Assert.That(packets.Length, Is.EqualTo(1));
-                return packets[0];
-            }
-
-            // Host 파이프라인은 03 책임이라, 여기서는 확정된 RPC 를 그대로 되돌려 Client 수신 경로만 검증한다.
-            public void DeliverInbound(RelayPacketRpc packet, int senderNetworkId)
-            {
-                packet.SenderNetworkId = senderNetworkId;
-
-                var entity = World.EntityManager.CreateEntity();
-                World.EntityManager.AddComponentData(entity, packet);
-                World.EntityManager.AddComponentData(entity, new ReceiveRpcCommandRequest());
-            }
-
-            public void PumpReceive()
-            {
-                ReceiveSystem.Update();
-                DrainSystem.Update();
-            }
-        }
-
         private static byte[] CreatePayload(int size)
         {
             var payload = new byte[size];

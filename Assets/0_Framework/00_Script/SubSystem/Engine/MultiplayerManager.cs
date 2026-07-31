@@ -92,6 +92,7 @@ namespace O2un
 
         protected override void SafeDispose()
         {
+            CloseGameSession();
             _sessionCoordinator?.Dispose();
             _coordinator?.Dispose();
             _matchmaking?.Dispose();
@@ -124,37 +125,11 @@ namespace O2un
             return messenger.SendDataAsync(eventId, packetType, data, ct);
         }
 
-        public async UniTask<P2PPacketResult<TResponse>> SendDataAndWaitAsync<TRequest, TResponse>(NetworkPacketId eventId, NetworkPacketType packetType, TRequest data, TimeSpan timeout, CancellationToken ct = default)
+        public UniTask<P2PPacketResult<TResponse>> SendDataAndWaitAsync<TRequest, TResponse>(NetworkPacketId eventId, NetworkPacketType packetType, TRequest data, TimeSpan timeout, CancellationToken ct = default)
         {
             IP2PMessenger messenger = _sessionCoordinator?.Messenger;
 
-            if (null == messenger)
-            {
-                return P2PPacketResult<TResponse>.Failure(P2PPacketReasons.NOT_CONNECTED);
-            }
-
-            try
-            {
-                TResponse response = await messenger.SendDataAndWaitAsync<TRequest, TResponse>(eventId, packetType, data, timeout, ct);
-                return P2PPacketResult<TResponse>.Success(response);
-            }
-            catch (NetworkSendFailedException)
-            {
-                return P2PPacketResult<TResponse>.Failure(P2PPacketReasons.SEND_FAILED);
-            }
-            catch (TimeoutException)
-            {
-                return P2PPacketResult<TResponse>.Failure(P2PPacketReasons.TIMEOUT);
-            }
-            catch (ObjectDisposedException)
-            {
-                return P2PPacketResult<TResponse>.Failure(P2PPacketReasons.SESSION_CLOSED);
-            }
-            catch (OperationCanceledException) when (false == ct.IsCancellationRequested)
-            {
-                // 호출부가 취소한 게 아니면 세션이 응답 대기 중에 끊긴 것이다. 호출부의 취소만 그대로 올려보낸다.
-                return P2PPacketResult<TResponse>.Failure(P2PPacketReasons.SESSION_CLOSED);
-            }
+            return messenger.SendDataAndWaitResultAsync<TRequest, TResponse>(eventId, packetType, data, timeout, ct);
         }
 
         public UniTask<bool> CreateRoomAsync(string playerId, int maxPlayers, CancellationToken ct = default)
@@ -183,7 +158,7 @@ namespace O2un
         {
             _session.Set(NetcodeSessionState.Disconnecting);
 
-            _sessionCoordinator.CloseSession();
+            CloseGameSession();
 
             try
             {
@@ -207,7 +182,7 @@ namespace O2un
             _isConnectionProcessing = true;
             var isConnected = false;
 
-            _sessionCoordinator.CloseSession();
+            CloseGameSession();
 
             try
             {
@@ -273,7 +248,7 @@ namespace O2un
                 {
                     if (false == isConnected)
                     {
-                        _sessionCoordinator.CloseSession();
+                        CloseGameSession();
 
                         if (true == _coordinator.HasActiveConnection)
                         {
@@ -288,6 +263,11 @@ namespace O2un
 
                 _isConnectionProcessing = false;
             }
+        }
+
+        private void CloseGameSession()
+        {
+            _sessionCoordinator?.CloseSession();
         }
 
         private async UniTask<bool> WaitForNetworkIdAsync(CancellationToken ct)
@@ -317,7 +297,7 @@ namespace O2un
 
         private void HandleSessionClosed()
         {
-            _sessionCoordinator.CloseSession();
+            CloseGameSession();
             _coordinator.DisconnectAsync().Forget();
             _session.Reset();
         }

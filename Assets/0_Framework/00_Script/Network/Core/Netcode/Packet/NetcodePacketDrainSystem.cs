@@ -48,7 +48,7 @@ namespace O2un.Core.Network
             {
                 try
                 {
-                    NetcodePacketBridge.RaisePacketDrained(packet);
+                    NetcodePacketBridge.RaisePacketDrained(World, packet);
                 }
                 catch (Exception e)
                 {
