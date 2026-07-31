@@ -107,7 +107,6 @@ namespace O2un.Core.Network
             var waiter = new RequestWaiter<T>(expectedEventId, parser);
             _waiters.Add(sequence, waiter);
 
-            // 이미 취소된 토큰이면 Register 가 취소 콜백을 동기 호출하므로, 등록을 마친 뒤에 건다.
             waiter.Start(ct, () => CancelWaiter(sequence, waiter));
             return waiter.Task;
         }

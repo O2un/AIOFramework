@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace O2un.Core.Network
@@ -45,16 +45,14 @@ namespace O2un.Core.Network
     /// </summary>
     public static class MatchmakingReasons
     {
-        // 사용자가 행동을 바꿔 해결할 수 있는 것만 공개한다.
         public const string ROOM_NOT_FOUND = "ROOM_NOT_FOUND";
         public const string ROOM_FULL = "ROOM_FULL";
         public const string NOT_IN_ROOM = "NOT_IN_ROOM";
         public const string NO_RESPONSE = "NO_RESPONSE";
+        public const string BUILD_INCOMPATIBLE = "BUILD_INCOMPATIBLE";
 
-        // 공개 목록에 없는 사유는 전부 이것으로 접힌다.
         public const string REQUEST_REJECTED = "REQUEST_REJECTED";
 
-        // 서버 푸시(SessionClosedNotice) 사유라 Ack 와 경로가 다르고 이 필터를 타지 않는다.
         public const string HOST_LEFT = "HOST_LEFT";
         public const string CONNECTION_LOST = "CONNECTION_LOST";
 
@@ -64,6 +62,7 @@ namespace O2un.Core.Network
             ROOM_FULL,
             NOT_IN_ROOM,
             NO_RESPONSE,
+            BUILD_INCOMPATIBLE,
         };
 
         /// <summary>

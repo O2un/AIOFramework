@@ -3,6 +3,8 @@
 const WebSocket = require('ws');
 
 const URL_BASE = 'ws://localhost:8080';
+const BUILD_ID = '20260731120000-abcdef01';
+const OTHER_BUILD_ID = '20260731120000-abcdef02';
 const results = [];
 let nextUniqueKey = 0n;
 
@@ -56,7 +58,7 @@ function waitFor(ws, event, uniqueKey = null, ms = 2000) {
         const hostReady = await waitFor(host, 'connectionReady');
         check('서버 등록 뒤 논리 연결이 완료된다', true === hostReady.data.isReady);
 
-        const createKey = send(host, 'createRoom', { playerId: 'player-host', port: 7777, maxPlayers: 4 });
+        const createKey = send(host, 'createRoom', { playerId: 'player-host', port: 7777, maxPlayers: 4, buildCompatibilityId: BUILD_ID });
         const created = await waitFor(host, 'createRoomAck', createKey);
         const hostConn = created.data.connection;
         const roomCode = hostConn.roomCode;
@@ -67,12 +69,13 @@ function waitFor(ws, event, uniqueKey = null, ms = 2000) {
         check('방 코드 6자리 [A-Z2-9]', /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/.test(roomCode), roomCode);
         check('호스트 주소가 IPv4', /^\d+\.\d+\.\d+\.\d+$/.test(hostConn.address), `${hostConn.address}:${hostConn.port}`);
         check('sessionId 발급', !!hostConn.sessionId);
+        check('방 호환성 값을 성공 응답에 반사한다', BUILD_ID === hostConn.buildCompatibilityId, hostConn.buildCompatibilityId);
 
         guest = await connect();
         const guestReady = await waitFor(guest, 'connectionReady');
         check('게스트도 서버 등록 뒤 논리 연결이 완료된다', true === guestReady.data.isReady);
 
-        const joinKey = send(guest, 'joinRoom', { playerId: 'player-guest', roomCode: roomCode.toLowerCase() });
+        const joinKey = send(guest, 'joinRoom', { playerId: 'player-guest', roomCode: roomCode.toLowerCase(), buildCompatibilityId: BUILD_ID });
         const joined = await waitFor(guest, 'joinRoomAck', joinKey);
         const guestConn = joined.data.connection;
 
@@ -114,6 +117,27 @@ function waitFor(ws, event, uniqueKey = null, ms = 2000) {
         check('빈 참가자 ID 는 실패 Ack 로 거절한다',
             false === invalidPlayer.data.isSuccess && 'INVALID_PLAYER_ID' === invalidPlayer.data.reason);
 
+        const otherBuildKey = send(guest, 'joinRoom', { playerId: 'player-other-build', roomCode, buildCompatibilityId: OTHER_BUILD_ID });
+        const otherBuild = await waitFor(guest, 'joinRoomAck', otherBuildKey);
+        check('다른 빌드 ID 는 BUILD_INCOMPATIBLE 로 거절한다',
+            false === otherBuild.data.isSuccess && 'BUILD_INCOMPATIBLE' === otherBuild.data.reason, otherBuild.data.reason);
+
+        const missingBuildKey = send(guest, 'joinRoom', { playerId: 'player-no-build', roomCode });
+        const missingBuild = await waitFor(guest, 'joinRoomAck', missingBuildKey);
+        check('빌드 ID 누락도 BUILD_INCOMPATIBLE 로 거절한다',
+            false === missingBuild.data.isSuccess && 'BUILD_INCOMPATIBLE' === missingBuild.data.reason, missingBuild.data.reason);
+
+        const badFormatBuildKey = send(guest, 'createRoom', { playerId: 'player-guest', port: 7779, maxPlayers: 4, buildCompatibilityId: 'not-an-id' });
+        const badFormatBuild = await waitFor(guest, 'createRoomAck', badFormatBuildKey);
+        check('형식이 깨진 빌드 ID 로는 방을 만들지 못한다',
+            false === badFormatBuild.data.isSuccess && 'BUILD_INCOMPATIBLE' === badFormatBuild.data.reason, badFormatBuild.data.reason);
+
+        const rejectedListKey = send(guest, 'roomList', {});
+        const rejectedList = await waitFor(guest, 'roomListAck', rejectedListKey);
+        check('거절된 요청이 방 상태를 바꾸지 않는다',
+            2 === rejectedList.data.rooms.find(r => r.roomCode === roomCode)?.currentPlayers,
+            JSON.stringify(rejectedList.data.rooms));
+
         const echoedKey = send(guest, 'echo', { ping: 1 });
         const echoed = await waitFor(guest, 'echoAck', echoedKey);
         check('잘못된 요청 뒤에도 서버가 계속 응답한다', 1 === echoed.data.ping);
@@ -137,7 +161,7 @@ function waitFor(ws, event, uniqueKey = null, ms = 2000) {
             false === wrongLeave.data.isSuccess && 'SESSION_MISMATCH' === wrongLeave.data.reason);
 
         leaver = await connect();
-        const leaverJoinKey = send(leaver, 'joinRoom', { playerId: 'player-leaver', roomCode });
+        const leaverJoinKey = send(leaver, 'joinRoom', { playerId: 'player-leaver', roomCode, buildCompatibilityId: BUILD_ID });
         const leaverJoined = await waitFor(leaver, 'joinRoomAck', leaverJoinKey);
         const leaverLeaveKey = send(leaver, 'leaveRoom', { sessionId: leaverJoined.data.connection.sessionId });
         const leaverLeft = await waitFor(leaver, 'leaveRoomAck', leaverLeaveKey);

@@ -1,0 +1,19 @@
+{
+    "name": "O2un.Network.Editor",
+    "rootNamespace": "O2un.Core.Network.Editor",
+    "references": [
+        "O2un.Core",
+        "O2un.Network"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

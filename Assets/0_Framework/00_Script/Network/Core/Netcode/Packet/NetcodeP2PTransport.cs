@@ -20,23 +20,40 @@ namespace O2un.Core.Network
         private readonly Dictionary<P2PPeerId, int> _peerNetworkIds = new();
         private int _localNetworkId;
 
-        internal NetcodeP2PTransport(World clientWorld)
+        // 세션은 연결이 선 뒤에 열린다. Network ID 를 사건이 아니라 상태로 받아야 이미 확정된 값을 놓치지 않는다.
+        internal NetcodeP2PTransport(World clientWorld, ReadOnlyReactiveProperty<int> networkId)
         {
             if (null == clientWorld || false == clientWorld.IsCreated)
             {
                 throw new ArgumentException("[NetcodeP2PTransport] 생성된 Client World 가 필요하다.", nameof(clientWorld));
             }
 
+            if (null == networkId)
+            {
+                throw new ArgumentNullException(nameof(networkId));
+            }
+
             _clientWorld = clientWorld;
 
             NetcodePacketBridge.PacketDrained += HandlePacketDrained;
-            NetcodeConnectionBridge.NetworkIdChanged += HandleNetworkIdChanged;
+            networkId.Subscribe(ApplyNetworkId).AddTo(DisposableR3);
         }
 
         public ReadOnlyReactiveProperty<bool> IsConnected => _isConnected;
         public Observable<P2PInboundPacket> PacketReceived => _packetReceived;
 
         internal int PeerCount => _peerNetworkIds.Count;
+
+        protected override void SafeDispose()
+        {
+            NetcodePacketBridge.PacketDrained -= HandlePacketDrained;
+
+            _peerNetworkIds.Clear();
+            _packetReceived.Dispose();
+            _isConnected.Dispose();
+
+            base.SafeDispose();
+        }
 
         public async UniTask<bool> SendAsync(P2PRequestPacket packet, CancellationToken ct = default)
         {
@@ -84,19 +101,7 @@ namespace O2un.Core.Network
             return true;
         }
 
-        protected override void SafeDispose()
-        {
-            NetcodePacketBridge.PacketDrained -= HandlePacketDrained;
-            NetcodeConnectionBridge.NetworkIdChanged -= HandleNetworkIdChanged;
-
-            _peerNetworkIds.Clear();
-            _packetReceived.Dispose();
-            _isConnected.Dispose();
-
-            base.SafeDispose();
-        }
-
-        private void HandleNetworkIdChanged(int networkId)
+        private void ApplyNetworkId(int networkId)
         {
             if (true == IsDisposed)
             {

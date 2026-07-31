@@ -16,6 +16,7 @@ namespace O2un.Core.Network
         public string Address { get; set; }
         public ushort Port { get; set; }
         public string ConnectionToken { get; set; }
+        public string BuildCompatibilityId { get; set; }
     }
 
     public sealed class CreateRoomReq
@@ -23,12 +24,14 @@ namespace O2un.Core.Network
         public string PlayerId { get; set; }
         public int MaxPlayers { get; set; }
         public ushort Port { get; set; }
+        public string BuildCompatibilityId { get; set; }
     }
 
     public sealed class JoinRoomReq
     {
         public string PlayerId { get; set; }
         public string RoomCode { get; set; }
+        public string BuildCompatibilityId { get; set; }
     }
 
     public sealed class LeaveRoomReq

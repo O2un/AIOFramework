@@ -1,14 +1,13 @@
-using System;
+﻿using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using O2un.Core.Data;
 using O2un.Core.Utils;
 using R3;
-using VContainer.Unity;
 
 namespace O2un.Core.Network
 {
-    public sealed class WebSocketMatchmakingService : SafeDisposableClass, IMatchmakingService, IInitializable
+    public sealed class WebSocketMatchmakingService : SafeDisposableClass, IMatchmakingService
     {
         private readonly INetworkMessenger _messenger;
         private readonly IRuntimeDataProvider _dataProvider;
@@ -65,7 +64,6 @@ namespace O2un.Core.Network
             {
                 var readySource = new UniTaskCompletionSource<bool>();
 
-                // NetworkManager 가 부팅 때 이미 접속하고 재접속까지 돌리므로, 여기서 소켓을 또 열지 않고 준비될 때까지만 기다린다.
                 using var subscription = _messenger.IsConnected
                     .Where(isConnected => true == isConnected)
                     .Subscribe(isConnected => readySource.TrySetResult(isConnected));
@@ -88,8 +86,8 @@ namespace O2un.Core.Network
                 PlayerId = playerId,
                 MaxPlayers = maxPlayers,
 
-                // 포트는 화면이 정할 값이 아니다. 호스트가 Listen 할 로컬 설정에서 읽는다.
                 Port = _config.MultiplayerPort,
+                BuildCompatibilityId = BuildCompatibilityId.Current,
             };
 
             var ack = await _messenger.SendDataAndWaitAsync<CreateRoomReq, CreateRoomAck>(MatchmakingEvents.CREATE_ROOM, request, ct);
@@ -112,6 +110,7 @@ namespace O2un.Core.Network
             {
                 PlayerId = playerId,
                 RoomCode = roomCode,
+                BuildCompatibilityId = BuildCompatibilityId.Current,
             };
 
             var ack = await _messenger.SendDataAndWaitAsync<JoinRoomReq, JoinRoomAck>(MatchmakingEvents.JOIN_ROOM, request, ct);
@@ -184,11 +183,19 @@ namespace O2un.Core.Network
 
         private MatchmakingResult<MatchConnectionInfo> AcceptConnection(MatchConnectionInfo connection)
         {
-            // 서버가 성공이라 했는데 접속 정보가 비어 있으면 위쪽이 null 을 들고 Netcode 로 넘어간다. 거절과 같은 자리에서 끊는다.
             if (null == connection)
             {
                 Log.Print(Log.LogLevel.Error, "서버가 성공을 반환했는데 접속 정보가 비어 있다.", Log.LogFilter.Server);
                 return MatchmakingResult<MatchConnectionInfo>.Failure(MatchmakingReasons.REQUEST_REJECTED);
+            }
+
+            if (false == BuildCompatibilityId.IsMatch(connection.BuildCompatibilityId, BuildCompatibilityId.Current))
+            {
+                Log.Print(
+                    Log.LogLevel.Error,
+                    $"방 호환성 값이 내 빌드와 다르다. room={connection.BuildCompatibilityId ?? "null"}, local={BuildCompatibilityId.Current}",
+                    Log.LogFilter.Server);
+                return MatchmakingResult<MatchConnectionInfo>.Failure(MatchmakingReasons.BUILD_INCOMPATIBLE);
             }
 
             CurrentConnection = connection;

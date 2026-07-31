@@ -81,9 +81,12 @@ namespace O2un.Core.Network.Tests
 
         private static NetcodeP2PTransport CreateTransport(TestClientWorld clientWorld)
         {
-            var transport = new NetcodeP2PTransport(clientWorld.World);
-            NetcodeConnectionBridge.RaiseNetworkIdChanged(LOCAL_NETWORK_ID);
-            return transport;
+            return CreateTransport(clientWorld, new ReactiveProperty<int>(LOCAL_NETWORK_ID));
+        }
+
+        private static NetcodeP2PTransport CreateTransport(TestClientWorld clientWorld, ReactiveProperty<int> networkId)
+        {
+            return new NetcodeP2PTransport(clientWorld.World, networkId);
         }
 
         [Test]
@@ -125,6 +128,28 @@ namespace O2un.Core.Network.Tests
             Assert.That(received[0].SenderId, Is.EqualTo(new P2PPeerId(REMOTE_NETWORK_ID)));
             Assert.That(received[0].Payload.ToArray(), Is.EqualTo(payload));
             Assert.That(transport.IsConnected.CurrentValue, Is.True);
+        }
+
+        // 실제 순서는 연결로 Network ID 가 먼저 확정되고 그 뒤에 세션이 Transport 를 만드는 것이다.
+        // 사건이 아니라 상태를 구독하므로 구독 시점에 이미 확정된 값이 그대로 들어와야 한다.
+        [Test]
+        public async Task TransportAdoptsNetworkIdAssignedBeforeItWasCreated()
+        {
+            using var clientWorld = new TestClientWorld();
+            using var networkId = new ReactiveProperty<int>(LOCAL_NETWORK_ID);
+            using NetcodeP2PTransport transport = CreateTransport(clientWorld, networkId);
+
+            Assert.That(transport.IsConnected.CurrentValue, Is.True);
+            Assert.That(transport.PeerCount, Is.EqualTo(1));
+
+            await transport.SendAsync(new P2PRequestPacket(
+                NetworkPacketId.DebugRelayCheckPing,
+                NetworkPacketType.Broadcast,
+                1,
+                CreatePayload(4)));
+            clientWorld.SendSystem.Update();
+
+            Assert.That(clientWorld.SingleRpc().SenderNetworkId, Is.EqualTo(LOCAL_NETWORK_ID));
         }
 
         [Test]
@@ -175,7 +200,8 @@ namespace O2un.Core.Network.Tests
         public async Task DisposeClearsBridgeSubscriptionAndPeerMapping()
         {
             using var clientWorld = new TestClientWorld();
-            NetcodeP2PTransport transport = CreateTransport(clientWorld);
+            using var networkId = new ReactiveProperty<int>(LOCAL_NETWORK_ID);
+            NetcodeP2PTransport transport = CreateTransport(clientWorld, networkId);
             var received = new List<P2PInboundPacket>();
             using IDisposable subscription = transport.PacketReceived.Subscribe(received.Add);
 
@@ -196,7 +222,7 @@ namespace O2un.Core.Network.Tests
             clientWorld.DeliverInbound(rpc, REMOTE_NETWORK_ID);
 
             Assert.DoesNotThrow(() => clientWorld.PumpReceive());
-            Assert.DoesNotThrow(() => NetcodeConnectionBridge.RaiseNetworkIdChanged(0));
+            Assert.DoesNotThrow(() => networkId.Value = 0);
             Assert.That(transport.PeerCount, Is.Zero);
             Assert.That(received.Count, Is.EqualTo(1));
             Assert.CatchAsync<ObjectDisposedException>(async () => await transport.SendAsync(new P2PRequestPacket(

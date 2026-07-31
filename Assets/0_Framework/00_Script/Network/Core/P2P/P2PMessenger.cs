@@ -31,6 +31,7 @@ namespace O2un.Core.Network
         {
             ThrowIfDisposed();
             ValidatePacket(eventId, packetType);
+
             using var operationSource = CancellationTokenSource.CreateLinkedTokenSource(ct, LifetimeToken);
             var packet = CreateRequestPacket(eventId, packetType, 0, data);
             return await _transport.SendAsync(packet, operationSource.Token);

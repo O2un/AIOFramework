@@ -36,7 +36,6 @@ namespace O2un.Core.Network
         private readonly ReactiveProperty<PlayerInfo[]> _players = new(Array.Empty<PlayerInfo>());
         private readonly ReactiveProperty<int> _networkId = new(0);
 
-        ReadOnlyReactiveProperty<NetcodeSessionState> INetcodeSessionSource.State => State;
         public ReadOnlyReactiveProperty<string> RoomCode => _roomCode;
         public ReadOnlyReactiveProperty<PlayerInfo[]> Players => _players;
         public ReadOnlyReactiveProperty<int> NetworkId => _networkId;

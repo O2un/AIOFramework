@@ -15,6 +15,9 @@ const isPlayerId = (value) => 'string' === typeof value && 0 < value.trim().leng
 const isPort = (value) => Number.isInteger(value) && 0 < value && 65535 >= value;
 const isMaxPlayers = (value) => Number.isInteger(value) && 0 < value && 2147483647 >= value;
 
+// 빌드 파이프라인이 굽는 배포 묶음 키. 형식은 C# BuildCompatibilityId 와 같아야 한다.
+const isBuildCompatibilityId = (value) => 'string' === typeof value && /^\d{14}-[0-9a-f]{8}$/.test(value);
+
 function newRoomCode() {
     for (;;) {
         let code = '';
@@ -33,7 +36,8 @@ function connectionOf(room, role) {
         address: room.address,
         port: room.port,
         // connectionToken 은 발급만 하고 검증하지 않는다 (PRD-02 범위 밖).
-        connectionToken: crypto.randomUUID()
+        connectionToken: crypto.randomUUID(),
+        buildCompatibilityId: room.buildCompatibilityId
     };
 }
 
@@ -112,11 +116,18 @@ function createRoom(ws, data, uniqueKey) {
         return;
     }
 
+    if (false === isBuildCompatibilityId(data.buildCompatibilityId)) {
+        server.send(ws, 'createRoomAck', { isSuccess: false, reason: 'BUILD_INCOMPATIBLE', connection: null }, uniqueKey);
+        return;
+    }
+
     const ctx = ws.ctx;
     if (roomOf.has(ctx.clientId)) leave(ws);
 
     const room = {
         roomCode: newRoomCode(),
+        // 빈 방의 첫 입장 값이 방 호환성 값이 된다.
+        buildCompatibilityId: data.buildCompatibilityId,
         sessionId: crypto.randomUUID(),
         hostClientId: ctx.clientId,
         address: ctx.address,
@@ -148,6 +159,12 @@ function joinRoom(ws, data, uniqueKey) {
 
     if (!room) {
         server.send(ws, 'joinRoomAck', { isSuccess: false, reason: 'ROOM_NOT_FOUND', connection: null }, uniqueKey);
+        return;
+    }
+
+    // 방 상태를 건드리기 전에 거른다. 뒤로 밀면 거절당한 클라이언트가 이미 방을 바꿔 놓는다.
+    if (room.buildCompatibilityId !== data.buildCompatibilityId || false === isBuildCompatibilityId(data.buildCompatibilityId)) {
+        server.send(ws, 'joinRoomAck', { isSuccess: false, reason: 'BUILD_INCOMPATIBLE', connection: null }, uniqueKey);
         return;
     }
 

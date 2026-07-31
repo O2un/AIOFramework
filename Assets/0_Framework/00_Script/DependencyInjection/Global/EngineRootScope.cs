@@ -17,7 +17,6 @@ namespace O2un.DI
             builder.Register<LogManager>(Lifetime.Singleton).AsImplementedInterfaces();
             builder.Register<NetworkManager>(Lifetime.Singleton).AsImplementedInterfaces();
             builder.Register<SceneManager>(Lifetime.Singleton).AsImplementedInterfaces();
-            builder.Register<WebSocketMatchmakingService>(Lifetime.Singleton).AsImplementedInterfaces();
             builder.Register<MultiplayerManager>(Lifetime.Singleton).AsImplementedInterfaces();
 
             RegisterProviders(builder);
