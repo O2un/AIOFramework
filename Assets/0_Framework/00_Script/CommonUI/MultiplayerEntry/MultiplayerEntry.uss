@@ -1,0 +1,239 @@
+.multiplayer-entry {
+    flex-grow: 1;
+    background-color: rgb(18, 18, 18);
+    padding: 24px;
+}
+
+.entry-header {
+    margin-bottom: 20px;
+}
+
+.entry-title {
+    font-size: 24px;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+}
+
+.entry-subtitle {
+    font-size: 12px;
+    color: rgb(179, 179, 179);
+    margin-top: 4px;
+}
+
+.entry-body {
+    flex-direction: row;
+    flex-grow: 1;
+}
+
+.entry-actions {
+    width: 320px;
+    flex-shrink: 0;
+    margin-right: 20px;
+    background-color: rgb(24, 24, 24);
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.action-title {
+    font-size: 18px;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+}
+
+.action-desc {
+    font-size: 12px;
+    color: rgb(179, 179, 179);
+    white-space: normal;
+    margin-top: 4px;
+    margin-bottom: 16px;
+}
+
+.separator {
+    height: 1px;
+    background-color: rgb(38, 38, 38);
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.code-field {
+    height: 36px;
+    border-radius: 18px;
+    padding-left: 12px;
+    padding-right: 12px;
+    margin: 0 0 12px 0;
+    background-color: rgb(31, 31, 31);
+    border-width: 1px;
+    border-color: rgb(124, 124, 124);
+    -unity-text-align: middle-left;
+}
+
+.code-field > * {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+}
+
+.code-field:focus {
+    border-color: rgb(255, 255, 255);
+}
+
+.entry-button {
+    height: 34px;
+    padding-left: 16px;
+    padding-right: 16px;
+    margin: 0;
+    border-radius: 17px;
+    border-width: 0;
+    background-color: rgb(31, 31, 31);
+    color: rgb(255, 255, 255);
+    font-size: 14px;
+    letter-spacing: 1.4px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    transition-property: background-color;
+    transition-duration: 0.12s;
+}
+
+.entry-button:hover {
+    background-color: rgb(47, 47, 47);
+}
+
+.entry-button:active {
+    background-color: rgb(58, 58, 58);
+}
+
+.entry-button:disabled {
+    opacity: 0.4;
+}
+
+.entry-button.accent {
+    background-color: rgb(30, 215, 96);
+    color: rgb(0, 0, 0);
+}
+
+.entry-button.accent:hover {
+    background-color: rgb(29, 185, 84);
+}
+
+.entry-button.outlined {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 1px;
+    border-color: rgb(124, 124, 124);
+}
+
+.entry-button.outlined:hover {
+    background-color: rgb(31, 31, 31);
+}
+
+.entry-button.small {
+    height: 28px;
+    border-radius: 14px;
+    font-size: 12px;
+}
+
+.room-list-panel {
+    flex-grow: 1;
+    background-color: rgb(24, 24, 24);
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.panel-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.panel-title {
+    font-size: 18px;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+}
+
+.room-list-area {
+    flex-grow: 1;
+}
+
+.room-list {
+    flex-grow: 1;
+}
+
+.room-row {
+    flex-direction: row;
+    align-items: center;
+    height: 44px;
+    padding-left: 12px;
+    padding-right: 12px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    background-color: rgb(31, 31, 31);
+    transition-property: background-color;
+    transition-duration: 0.12s;
+}
+
+.room-row:hover {
+    background-color: rgb(47, 47, 47);
+}
+
+.room-row.full {
+    opacity: 0.4;
+}
+
+.room-code {
+    width: 110px;
+    flex-shrink: 0;
+    font-size: 16px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
+    color: rgb(255, 255, 255);
+}
+
+.room-host {
+    flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12px;
+    -unity-text-align: middle-left;
+    color: rgb(179, 179, 179);
+}
+
+.room-count {
+    width: 56px;
+    flex-shrink: 0;
+    font-size: 12px;
+    -unity-text-align: middle-right;
+    color: rgb(179, 179, 179);
+}
+
+.room-badge {
+    height: 18px;
+    padding-left: 8px;
+    padding-right: 8px;
+    margin-left: 12px;
+    border-radius: 2px;
+    background-color: rgb(37, 37, 37);
+    color: rgb(179, 179, 179);
+    font-size: 11px;
+    -unity-text-align: middle-center;
+}
+
+.empty-state {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+}
+
+.empty-title {
+    font-size: 16px;
+    color: rgb(179, 179, 179);
+}
+
+.empty-subtitle {
+    font-size: 12px;
+    color: rgb(124, 124, 124);
+    margin-top: 4px;
+}
