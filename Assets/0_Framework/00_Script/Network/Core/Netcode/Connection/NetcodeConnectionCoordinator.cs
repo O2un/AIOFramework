@@ -38,6 +38,7 @@ namespace O2un.Core.Network
         protected override void SafeDispose()
         {
             NetcodeConnectionBridge.NetworkIdChanged -= HandleNetworkIdChanged;
+            HostAuthority.Clear();
             _networkId.Dispose();
 
             base.SafeDispose();
@@ -80,6 +81,7 @@ namespace O2un.Core.Network
 
                 _active = null;
                 _networkId.Value = 0;
+                HostAuthority.Clear();
                 throw;
             }
         }
@@ -97,6 +99,7 @@ namespace O2un.Core.Network
             await module.DisconnectAsync(ct);
 
             _networkId.Value = 0;
+            HostAuthority.Clear();
         }
 
         private void HandleNetworkIdChanged(int networkId)
@@ -107,6 +110,14 @@ namespace O2un.Core.Network
             }
 
             _networkId.Value = networkId;
+
+            // Server World 에는 Host 가 누구인지 알 수단이 없다. 같은 프로세스의 Host 만 자기 NetworkId 를 알려줄 수 있다.
+            if (MultiplayerRole.Host != _active?.Role)
+            {
+                return;
+            }
+
+            HostAuthority.SetHostPeer(new P2PPeerId((ulong)networkId));
         }
     }
 }

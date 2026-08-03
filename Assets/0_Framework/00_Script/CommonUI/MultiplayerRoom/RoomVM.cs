@@ -13,6 +13,7 @@ namespace O2un.UI
         private const string REQUEST_KEY = "RoomRequest";
 
         private readonly IMultiplayerManager _multiplayer;
+        private readonly GameStartRunner _gameStart;
 
         private readonly ReactiveProperty<bool> _isBusy = new(false);
 
@@ -25,9 +26,10 @@ namespace O2un.UI
         // 방을 만든 직후에는 참가자 목록이 아직 서버에서 오지 않는다. 역할은 접속 응답으로 확정된다.
         public Observable<bool> IsHost => _multiplayer.Session.Role.Select(role => MultiplayerRole.Host == role);
 
-        public RoomVM(IMultiplayerManager multiplayer)
+        public RoomVM(IMultiplayerManager multiplayer, GameStartRunner gameStart)
         {
             _multiplayer = multiplayer;
+            _gameStart = gameStart;
         }
 
         public override async UniTask InitAsync()
@@ -43,7 +45,11 @@ namespace O2un.UI
 
         internal void StartGame()
         {
-            // NULL
+            if (true == _isBusy.CurrentValue) return;
+
+            _isBusy.Value = true;
+
+            _gameStart.RequestStart();
         }
 
         internal void LeaveRoom()

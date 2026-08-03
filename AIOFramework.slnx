@@ -4,9 +4,9 @@
   <Project Path="O2un.Dev.Editor.csproj" />
   <Project Path="O2un.Data.csproj" />
   <Project Path="O2un.Network.Tests.csproj" />
+  <Project Path="O2un.DI.csproj" />
   <Project Path="O2un.Core.csproj" />
   <Project Path="O2un.SubSystem.csproj" />
-  <Project Path="O2un.DI.csproj" />
   <Project Path="O2un.UI.csproj" />
   <Project Path="O2un.Data.Editor.csproj" />
   <Project Path="O2un.Network.Editor.csproj" />

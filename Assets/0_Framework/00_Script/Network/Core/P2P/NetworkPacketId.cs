@@ -8,6 +8,7 @@ namespace O2un.Core.Network
     public enum NetworkPacketId
     {
         None = 0,
+        GameStart = 1,
         DebugRelayCheckPing = 1000001,
     }
 
