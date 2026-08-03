@@ -13,8 +13,10 @@ namespace O2un
     /// </summary>
     public interface IMultiplayerRoomContract
     {
-        UniTask<bool> CreateRoomAsync(string playerId, int maxPlayers, CancellationToken ct = default);
-        UniTask<bool> JoinRoomAsync(string playerId, string roomCode, CancellationToken ct = default);
+        string LocalPlayerId { get; }
+
+        UniTask<bool> CreateRoomAsync(int maxPlayers, CancellationToken ct = default);
+        UniTask<bool> JoinRoomAsync(string roomCode, CancellationToken ct = default);
         UniTask LeaveAsync(CancellationToken ct = default);
         UniTask<RoomSummary[]> GetRoomListAsync(CancellationToken ct = default);
     }
@@ -62,6 +64,10 @@ namespace O2un
         private NetworkRuntimeData _config;
         private bool _isConnectionProcessing;
 
+        // 계정 시스템이 없어 실행마다 새로 만든다. 재접속하면 다른 사람으로 보인다.
+        private readonly string _localPlayerId = Guid.NewGuid().ToString("N")[..8];
+
+        public string LocalPlayerId => _localPlayerId;
         public INetcodeSessionSource Session => _session;
 
         protected override UniTask InitAsync()
@@ -132,14 +138,14 @@ namespace O2un
             return messenger.SendDataAndWaitResultAsync<TRequest, TResponse>(eventId, packetType, data, timeout, ct);
         }
 
-        public UniTask<bool> CreateRoomAsync(string playerId, int maxPlayers, CancellationToken ct = default)
+        public UniTask<bool> CreateRoomAsync(int maxPlayers, CancellationToken ct = default)
         {
-            return RunAsync(NetcodeSessionState.CreatingRoom, token => _matchmaking.CreateRoomAsync(playerId, maxPlayers, token), ct);
+            return RunAsync(NetcodeSessionState.CreatingRoom, token => _matchmaking.CreateRoomAsync(_localPlayerId, maxPlayers, token), ct);
         }
 
-        public UniTask<bool> JoinRoomAsync(string playerId, string roomCode, CancellationToken ct = default)
+        public UniTask<bool> JoinRoomAsync(string roomCode, CancellationToken ct = default)
         {
-            return RunAsync(NetcodeSessionState.JoiningRoom, token => _matchmaking.JoinRoomAsync(playerId, roomCode, token), ct);
+            return RunAsync(NetcodeSessionState.JoiningRoom, token => _matchmaking.JoinRoomAsync(_localPlayerId, roomCode, token), ct);
         }
 
         public async UniTask<RoomSummary[]> GetRoomListAsync(CancellationToken ct = default)
@@ -205,6 +211,19 @@ namespace O2un
                 }
 
                 _session.SetRoomCode(result.Value.RoomCode);
+                _session.SetRole(result.Value.Role);
+
+                // 방을 만든 직후에는 RoomUpdated 가 오지 않는다. 본인으로 채워두지 않으면
+                // 두 번째 사람이 들어올 때까지 방이 빈 것으로 보인다.
+                _session.SetPlayers(new[]
+                {
+                    new PlayerInfo
+                    {
+                        PlayerId = _localPlayerId,
+                        IsHost = MultiplayerRole.Host == result.Value.Role,
+                    },
+                });
+
                 _session.Set(NetcodeSessionState.StartingNetcode);
 
                 await _coordinator.ConnectAsync(result.Value, ct);

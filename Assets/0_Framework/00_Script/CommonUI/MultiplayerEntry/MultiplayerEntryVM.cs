@@ -21,8 +21,6 @@ namespace O2un.UI
         private readonly ReactiveProperty<IReadOnlyList<RoomSummary>> _rooms = new(Array.Empty<RoomSummary>());
         private readonly ReactiveProperty<string> _roomCode = new(string.Empty);
 
-        private readonly string _playerId = Guid.NewGuid().ToString("N")[..8];
-
         public ReadOnlyReactiveProperty<bool> IsBusy => _isBusy;
         public ReadOnlyReactiveProperty<IReadOnlyList<RoomSummary>> Rooms => _rooms;
         public ReadOnlyReactiveProperty<string> RoomCode => _roomCode;
@@ -36,6 +34,19 @@ namespace O2un.UI
         public override async UniTask InitAsync()
         {
             await base.InitAsync();
+
+            _multiplayer.Session.State
+                        .Select(state => NetcodeSessionState.InLobby != state)
+                        .DistinctUntilChanged()
+                        .Subscribe(OnOutsideRoomChanged)
+                        .AddTo(DisposableR3);
+        }
+
+        private void OnOutsideRoomChanged(bool isOutsideRoom)
+        {
+            SetVisible(isOutsideRoom);
+
+            if (false == isOutsideRoom) return;
 
             RefreshRoomList();
         }
@@ -62,7 +73,7 @@ namespace O2un.UI
 
         internal void CreateRoom()
         {
-            Request(async ct => await _multiplayer.CreateRoomAsync(_playerId, MAX_PLAYERS, ct));
+            Request(async ct => await _multiplayer.CreateRoomAsync(MAX_PLAYERS, ct));
         }
 
         internal void JoinRoom()
@@ -74,7 +85,7 @@ namespace O2un.UI
                 return;
             }
 
-            Request(async ct => await _multiplayer.JoinRoomAsync(_playerId, roomCode, ct));
+            Request(async ct => await _multiplayer.JoinRoomAsync(roomCode, ct));
         }
 
         internal void RefreshRoomList()
