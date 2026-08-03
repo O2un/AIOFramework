@@ -93,10 +93,15 @@ namespace O2un.Core
                 }
                 finally
                 {
-                    _currentState.Value = SceneState.Idle;
-                    if (ct.IsCancellationRequested)
+                    // Dispose 는 _disposableR3 를 먼저 끊고 SafeDispose 로 _currentState 를 닫는데,
+                    // 그 취소로 깨어난 이 finally 는 다음 PlayerLoop 틱에야 돈다. 이미 닫힌 뒤다.
+                    if (false == IsDisposed)
                     {
-                        _loadingRuntime.Set(0f);
+                        _currentState.Value = SceneState.Idle;
+                        if (ct.IsCancellationRequested)
+                        {
+                            _loadingRuntime.Set(0f);
+                        }
                     }
                 }
             });
