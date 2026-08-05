@@ -35,7 +35,7 @@ namespace O2un.Core
     
         public bool Equals(UniqueKey other) => _raw == other._raw;
         public override bool Equals(object obj) => obj is UniqueKey other && Equals(other);
-        public override int GetHashCode() => _raw.GetHashCode();
+        public override int GetHashCode() => HashCode.Combine(_group, _index);
 
         public static bool operator ==(UniqueKey left, UniqueKey right) => left._raw == right._raw;
         public static bool operator !=(UniqueKey left, UniqueKey right) => left._raw != right._raw;
