@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace O2un.Core
 {
     [StructLayout(LayoutKind.Explicit)]
-    public class UniqueKey : IEquatable<UniqueKey>
+    public readonly struct UniqueKey : IEquatable<UniqueKey>
     {
         [FieldOffset(0)]
         private readonly long _raw;
@@ -33,13 +33,17 @@ namespace O2un.Core
             _raw = raw;
         }
     
-        public bool Equals(UniqueKey other) => other != null && _raw == other._raw;
+        public bool Equals(UniqueKey other) => _raw == other._raw;
         public override bool Equals(object obj) => obj is UniqueKey other && Equals(other);
         public override int GetHashCode() => _raw.GetHashCode();
+
+        public static bool operator ==(UniqueKey left, UniqueKey right) => left._raw == right._raw;
+        public static bool operator !=(UniqueKey left, UniqueKey right) => left._raw != right._raw;
+
         public static implicit operator long(UniqueKey key) => key._raw;
         public static implicit operator UniqueKey(long raw) => new UniqueKey(raw);
         
         public static UniqueKey Undefined => new UniqueKey(0);
-        public bool IsDefined => Undefined.Equals(this);
+        public bool IsDefined => false == Equals(Undefined);
     }
 }
