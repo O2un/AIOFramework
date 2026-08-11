@@ -190,5 +190,26 @@ namespace O2un.Core
         {
             return new EventBinding<TDelegate>(subscribe, unsubscribe);
         }
+
+        // Create와 동작이 같다. 구독 대상이 정적 이벤트라 구독이 객체 수명을 넘길 수 있다는 표시다.
+        public static EventBinding<Action> Static(Action<Action> subscribe, Action<Action> unsubscribe)
+        {
+            return Create(subscribe, unsubscribe);
+        }
+
+        public static EventBinding<Action<T>> Static<T>(Action<Action<T>> subscribe, Action<Action<T>> unsubscribe)
+        {
+            return Create(subscribe, unsubscribe);
+        }
+
+        public static EventBinding<Action<T1, T2>> Static<T1, T2>(Action<Action<T1, T2>> subscribe, Action<Action<T1, T2>> unsubscribe)
+        {
+            return Create(subscribe, unsubscribe);
+        }
+
+        public static EventBinding<TDelegate> Static<TDelegate>(Action<TDelegate> subscribe, Action<TDelegate> unsubscribe)
+        {
+            return Create(subscribe, unsubscribe);
+        }
     }
 }
