@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: UI_Demo_en
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.StringTable
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: 788b8e0b15b7a974694c9b39d3108ed9, type: 2}
+  m_Metadata:
+    m_Items:
+    - rid: 1430215289912688744
+  m_TableData:
+  - m_Id: 455061504
+    m_Localized: Localization Demo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 488615936
+    m_Localized: Switching the language repaints every label on this screen.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 488615937
+    m_Localized: Hello, {playerName}!
+    m_Metadata:
+      m_Items:
+      - rid: 1430215289912688744
+  - m_Id: 492810240
+    m_Localized: '{count} {count:plural:item|items}'
+    m_Metadata:
+      m_Items:
+      - rid: 1430215289912688744
+  - m_Id: 492810241
+    m_Localized: 'Current language: {language}'
+    m_Metadata:
+      m_Items:
+      - rid: 1430215289912688744
+  - m_Id: 492810242
+    m_Localized: Idle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 492810243
+    m_Localized: Running
+    m_Metadata:
+      m_Items: []
+  - m_Id: 492810244
+    m_Localized: Done
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds:
+    - rid: 1430215289912688744
+      type: {class: SmartFormatTag, ns: UnityEngine.Localization.Metadata, asm: Unity.Localization}
+      data:
+        m_Entries: 
+        m_SharedEntries:
+        - id: 488615937
+        - id: 492810240
+        - id: 492810241
