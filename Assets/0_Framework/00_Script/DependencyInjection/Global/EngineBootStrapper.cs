@@ -28,7 +28,18 @@ namespace O2un.DI
 
             await UniTask.WhenAll(_startupTasks.Select(task => task.StartupTaskAsync()));
 
-            await _sceneManager.LoadSceneAsync("LobbyScene");
+            BootConfig config = BootConfig.LoadRuntime();
+
+            string startScene = null != config ? config.ResolveStartScene() : BootConfig.DEFAULT_START_SCENE;
+
+            // 이미 그 씬에서 시작했으면 다시 열지 않는다. 다시 열면 초기화 중이던 View 가 통째로 파괴되고,
+            // 그 View 들은 await 뒤에 Model 을 다시 확인하지 않아 NullReference 를 던진다.
+            if (startScene == UnityEngine.SceneManagement.SceneManager.GetActiveScene().name)
+            {
+                return;
+            }
+
+            await _sceneManager.LoadSceneAsync(startScene);
         }
     }
 }
