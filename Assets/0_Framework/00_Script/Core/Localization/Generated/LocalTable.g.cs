@@ -10,6 +10,8 @@ namespace O2un.Core.Localization
     public enum LocalTable
     {
         None = 0,
+        UI_Common = 1,
+        UI_Demo = 2,
     }
 
     public static class LocalTableExtensions
@@ -18,6 +20,8 @@ namespace O2un.Core.Localization
         {
             return table switch
             {
+                LocalTable.UI_Common => "UI_Common",
+                LocalTable.UI_Demo => "UI_Demo",
                 _ => string.Empty,
             };
         }
