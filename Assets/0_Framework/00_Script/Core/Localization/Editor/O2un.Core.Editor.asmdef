@@ -1,15 +1,14 @@
 {
-    "name": "O2un.Core",
-    "rootNamespace": "O2un",
+    "name": "O2un.Core.Editor",
+    "rootNamespace": "O2un.Core.Localization.Editor",
     "references": [
-        "UniTask",
-        "UniTask.Addressables",
-        "R3.Unity",
-        "Unity.Addressables",
-        "Unity.ResourceManager",
-        "Unity.Localization"
+        "O2un.Core",
+        "Unity.Localization",
+        "Unity.Localization.Editor"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
