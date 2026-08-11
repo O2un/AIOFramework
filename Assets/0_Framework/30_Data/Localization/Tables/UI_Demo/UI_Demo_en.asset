@@ -54,6 +54,14 @@ MonoBehaviour:
     m_Localized: Done
     m_Metadata:
       m_Items: []
+  - m_Id: 34961895698432
+    m_Localized: UI Demos
+    m_Metadata:
+      m_Items: []
+  - m_Id: 34961987973120
+    m_Localized: LOCALIZATION
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds:

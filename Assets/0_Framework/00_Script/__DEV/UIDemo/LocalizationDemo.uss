@@ -1,7 +1,7 @@
 .demo-root {
     width: 50%;
     height: 100%;
-    padding: 24px;
+    padding: 88px 24px 24px 24px;
     background-color: rgb(18, 18, 18);
 }
 

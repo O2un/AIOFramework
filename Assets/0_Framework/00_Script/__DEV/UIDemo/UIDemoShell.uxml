@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="UIDemoShell.uss"/>
+    <ui:VisualElement name="ShellRoot" class="shell-root">
+        <ui:Label name="ShellTitle" class="shell-title"/>
+        <ui:VisualElement class="shell-menu">
+            <ui:Button name="LocalizationButton" class="pill-button shell-menu-button"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

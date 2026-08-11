@@ -73,9 +73,16 @@ namespace O2un.DEV
         public string PlayerName => DEMO_PLAYER_NAME;
         public int ItemCount => DEMO_ITEM_COUNT;
 
-        public LocalizationDemoVM()
+        public LocalizationDemoVM(UIDemoRouter router)
         {
             ON_LOCALE_CHANGED.AddTo(this, OnSelectedLocaleChanged);
+
+            router.Current.Subscribe(OnPageChanged).AddTo(DisposableR3);
+        }
+
+        private void OnPageChanged(UIDemoPage page)
+        {
+            SetVisible(UIDemoPage.Localization == page);
         }
 
         public override async UniTask InitAsync()
