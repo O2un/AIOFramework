@@ -29,17 +29,17 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 488615937
-    m_Localized: "\uC548\uB155\uD558\uC138\uC694, {playerName}\uB2D8!"
+    m_Localized: "\uC548\uB155\uD558\uC138\uC694, {PlayerName}\uB2D8!"
     m_Metadata:
       m_Items:
       - rid: 1430215289912688743
   - m_Id: 492810240
-    m_Localized: "\uC544\uC774\uD15C {count}\uAC1C"
+    m_Localized: "\uC544\uC774\uD15C {Count}\uAC1C"
     m_Metadata:
       m_Items:
       - rid: 1430215289912688743
   - m_Id: 492810241
-    m_Localized: "\uD604\uC7AC \uC5B8\uC5B4: {language}"
+    m_Localized: "\uD604\uC7AC \uC5B8\uC5B4: {Language}"
     m_Metadata:
       m_Items:
       - rid: 1430215289912688743

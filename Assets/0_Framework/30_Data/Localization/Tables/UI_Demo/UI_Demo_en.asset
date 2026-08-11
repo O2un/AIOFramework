@@ -28,17 +28,17 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 488615937
-    m_Localized: Hello, {playerName}!
+    m_Localized: Hello, {PlayerName}!
     m_Metadata:
       m_Items:
       - rid: 1430215289912688744
   - m_Id: 492810240
-    m_Localized: '{count} {count:plural:item|items}'
+    m_Localized: '{Count} {Count:plural:item|items}'
     m_Metadata:
       m_Items:
       - rid: 1430215289912688744
   - m_Id: 492810241
-    m_Localized: 'Current language: {language}'
+    m_Localized: 'Current language: {Language}'
     m_Metadata:
       m_Items:
       - rid: 1430215289912688744

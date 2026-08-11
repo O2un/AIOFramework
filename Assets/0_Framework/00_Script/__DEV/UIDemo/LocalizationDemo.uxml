@@ -1,0 +1,23 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="LocalizationDemo.uss"/>
+    <ui:VisualElement name="DemoRoot" class="demo-root">
+        <ui:Label text="UI TOOLKIT" class="stack-tag"/>
+        <ui:VisualElement class="demo-header">
+            <ui:Label name="Title" class="title"/>
+            <ui:Label name="Subtitle" class="subtitle"/>
+        </ui:VisualElement>
+        <ui:VisualElement class="demo-card">
+            <ui:Label name="Greeting" class="line"/>
+            <ui:Label name="ItemCount" class="line"/>
+            <ui:Label name="CurrentLanguage" class="line accent-line"/>
+        </ui:VisualElement>
+        <ui:VisualElement class="status-row">
+            <ui:Label name="StatusIdle" class="status-chip"/>
+            <ui:Label name="StatusRunning" class="status-chip"/>
+            <ui:Label name="StatusDone" class="status-chip"/>
+        </ui:VisualElement>
+        <ui:VisualElement class="demo-footer">
+            <ui:Button name="LanguageButton" class="pill-button accent"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
