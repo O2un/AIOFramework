@@ -12,6 +12,10 @@ namespace O2un.Core.Network
     /// </summary>
     public sealed class NetworkClient : SafeDisposableClass
     {
+        private const int RECONNECT_BASE_DELAY_MS = 2000;
+        private const int RECONNECT_MAX_DELAY_MS = 15000;
+        private const int RECONNECT_MAX_SHIFT = 3;
+
         private readonly NetworkRuntimeData _config;
         private WebSocketClient _webSocket;
 
@@ -21,7 +25,7 @@ namespace O2un.Core.Network
         private readonly Subject<Unit> _onConnected = new();
         private readonly Subject<Unit> _onDisconnected = new();
         private readonly Subject<ReadOnlyMemory<byte>> _onRawMessageReceived = new();
-        private readonly CompositeDisposable _webSocketSubscriptions = new();
+        private readonly SerialDisposable _webSocketSubscriptions = new();
         public Observable<Unit> OnConnected => _onConnected;
         public Observable<Unit> OnDisconnected => _onDisconnected;
         public Observable<ReadOnlyMemory<byte>> OnRawMessageReceived => _onRawMessageReceived;
@@ -45,28 +49,38 @@ namespace O2un.Core.Network
 
         private async UniTask ConnectInternalAsync(CancellationToken ct)
         {
-            _webSocketSubscriptions.Clear();
+            // 이전 소켓을 버리기 전에 구독을 먼저 끊는다. 남겨두면 Dispose가 흘리는 OnDisconnected를 받아 재접속이 다시 돈다.
+            _webSocketSubscriptions.Disposable = null;
             _webSocket?.Dispose();
             _webSocket = new();
-
-            _webSocket.OnConnected
-                .ObserveOnMainThread()
-                .Subscribe(_ => HandleConnected())
-                .AddTo(_webSocketSubscriptions);
-            _webSocket.OnDisconnected
-                .ObserveOnMainThread()
-                .Subscribe(HandleDisconnected)
-                .AddTo(_webSocketSubscriptions);
-            _webSocket.OnError
-                .ObserveOnMainThread()
-                .Subscribe(HandleError)
-                .AddTo(_webSocketSubscriptions);
-            _webSocket.OnRawMessageReceived
-                .ObserveOnMainThread()
-                .Subscribe(HandleRawMessage)
-                .AddTo(_webSocketSubscriptions);
+            _webSocketSubscriptions.Disposable = SubscribeSocket(_webSocket);
 
             await _webSocket.ConnectAsync(_config.ServerUrl, ct);
+        }
+
+        // DisposableBuilder는 ref struct라 async 메서드 안에 둘 수 없어 분리했다.
+        private IDisposable SubscribeSocket(WebSocketClient socket)
+        {
+            var builder = Disposable.CreateBuilder();
+
+            socket.OnConnected
+                .ObserveOnMainThread()
+                .Subscribe(_ => HandleConnected())
+                .AddTo(ref builder);
+            socket.OnDisconnected
+                .ObserveOnMainThread()
+                .Subscribe(HandleDisconnected)
+                .AddTo(ref builder);
+            socket.OnError
+                .ObserveOnMainThread()
+                .Subscribe(HandleError)
+                .AddTo(ref builder);
+            socket.OnRawMessageReceived
+                .ObserveOnMainThread()
+                .Subscribe(HandleRawMessage)
+                .AddTo(ref builder);
+
+            return builder.Build();
         }
 
         private void HandleRawMessage(ReadOnlyMemory<byte> rawData)
@@ -114,13 +128,17 @@ namespace O2un.Core.Network
 
             try
             {
-                int attempt = 0;
-                int maxDelay = 15000;
+                int shift = 0;
 
                 while (false == IsDisposed && false == IsConnected)
                 {
-                    attempt++;
-                    int delay = Math.Min((int)Math.Pow(2, attempt) * 1000, maxDelay);
+                    int delay = Math.Min(RECONNECT_BASE_DELAY_MS << shift, RECONNECT_MAX_DELAY_MS);
+
+                    // 상한에 닿으면 증가를 멈춘다. 계속 올리면 int를 넘겨 delay가 음수가 되고 재접속이 매 프레임 돈다.
+                    if (shift < RECONNECT_MAX_SHIFT)
+                    {
+                        shift++;
+                    }
 
                     await UniTask.Delay(delay, cancellationToken: ct);
                     await ConnectInternalAsync(ct);
