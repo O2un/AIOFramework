@@ -18,7 +18,7 @@ namespace O2un.DI
 
         private readonly IMultiplayerManager _multiplayer;
         private readonly RelayCheckP2PModule _relayCheck;
-        private readonly CompositeDisposable _disposables = new();
+        private IDisposable _disposables;
 
         // 세션마다 Messenger 가 새로 열린다. 이전 세션 스트림 구독을 놓지 않으면 세션 수만큼 겹쳐 받는다.
         private readonly SerialDisposable _receiveSubscription = new();
@@ -31,17 +31,21 @@ namespace O2un.DI
 
         public void Initialize()
         {
-            _receiveSubscription.AddTo(_disposables);
+            var builder = Disposable.CreateBuilder();
+
+            _receiveSubscription.AddTo(ref builder);
 
             _multiplayer.Session.State
                 .Where(state => NetcodeSessionState.InLobby == state)
                 .Subscribe(_ => EnterLobby())
-                .AddTo(_disposables);
+                .AddTo(ref builder);
+
+            _disposables = builder.Build();
         }
 
         public void Dispose()
         {
-            _disposables.Dispose();
+            _disposables?.Dispose();
         }
 
         private void EnterLobby()

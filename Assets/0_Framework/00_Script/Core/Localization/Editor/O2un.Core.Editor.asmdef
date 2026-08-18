@@ -1,0 +1,20 @@
+{
+    "name": "O2un.Core.Editor",
+    "rootNamespace": "O2un.Core.Localization.Editor",
+    "references": [
+        "O2un.Core",
+        "Unity.Localization",
+        "Unity.Localization.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

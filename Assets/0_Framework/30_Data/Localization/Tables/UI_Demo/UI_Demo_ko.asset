@@ -1,0 +1,76 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: UI_Demo_ko
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.StringTable
+  m_LocaleId:
+    m_Code: ko
+  m_SharedData: {fileID: 11400000, guid: 788b8e0b15b7a974694c9b39d3108ed9, type: 2}
+  m_Metadata:
+    m_Items:
+    - rid: 1430215289912688743
+  m_TableData:
+  - m_Id: 455061504
+    m_Localized: "\uB85C\uCEEC\uB77C\uC774\uC988 \uB370\uBAA8"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 488615936
+    m_Localized: "\uC5B8\uC5B4\uB97C \uBC14\uAFB8\uBA74 \uC774 \uD654\uBA74\uC758
+      \uBAA8\uB4E0 \uAE00\uC790\uAC00 \uB2E4\uC2DC \uCE60\uD574\uC9D1\uB2C8\uB2E4."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 488615937
+    m_Localized: "\uC548\uB155\uD558\uC138\uC694, {PlayerName}\uB2D8!"
+    m_Metadata:
+      m_Items:
+      - rid: 1430215289912688743
+  - m_Id: 492810240
+    m_Localized: "\uC544\uC774\uD15C {Count}\uAC1C"
+    m_Metadata:
+      m_Items:
+      - rid: 1430215289912688743
+  - m_Id: 492810241
+    m_Localized: "\uD604\uC7AC \uC5B8\uC5B4: {Language}"
+    m_Metadata:
+      m_Items:
+      - rid: 1430215289912688743
+  - m_Id: 492810242
+    m_Localized: "\uB300\uAE30 \uC911"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 492810243
+    m_Localized: "\uC9C4\uD589 \uC911"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 492810244
+    m_Localized: "\uC644\uB8CC"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 34961895698432
+    m_Localized: "UI \uB370\uBAA8"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 34961987973120
+    m_Localized: "\uB85C\uCEEC\uB77C\uC774\uC988 \uD655\uC778"
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds:
+    - rid: 1430215289912688743
+      type: {class: SmartFormatTag, ns: UnityEngine.Localization.Metadata, asm: Unity.Localization}
+      data:
+        m_Entries: 
+        m_SharedEntries:
+        - id: 488615937
+        - id: 492810240
+        - id: 492810241

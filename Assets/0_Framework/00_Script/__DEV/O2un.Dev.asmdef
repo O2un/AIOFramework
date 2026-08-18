@@ -5,8 +5,14 @@
         "O2un.Core",
         "O2un.SubSystem",
         "O2un.Network",
+        "O2un.UI",
+        "O2un.DI",
         "UniTask",
-        "R3.Unity"
+        "VContainer",
+        "R3.Unity",
+        "Unity.TextMeshPro",
+        "Unity.Localization",
+        "Unity.ResourceManager"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

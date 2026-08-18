@@ -12,7 +12,7 @@ namespace O2un.Core
     /// </summary>
     public sealed class VisualElementBinding<TElement> : IDisposable where TElement : VisualElement
     {
-        private readonly CompositeDisposable _registrations = new();
+        private DisposableBag _registrations;
         private bool _isDisposed;
 
         public TElement Element { get; }
@@ -99,7 +99,7 @@ namespace O2un.Core
 
             try
             {
-                Disposable.Create(new TrackedRegistration<TState>(Element, state, unsubscribe), static registration => registration.Unsubscribe()).AddTo(_registrations);
+                Disposable.Create(new TrackedRegistration<TState>(Element, state, unsubscribe), static registration => registration.Unsubscribe()).AddTo(ref _registrations);
             }
             catch
             {

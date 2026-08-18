@@ -1,0 +1,65 @@
+.shell-root {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 24px;
+    background-color: rgb(24, 24, 24);
+    border-bottom-width: 1px;
+    border-bottom-color: rgb(38, 38, 38);
+}
+
+.shell-title {
+    font-size: 20px;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+}
+
+.shell-menu {
+    flex-direction: row;
+    align-items: center;
+    margin-left: 24px;
+}
+
+.shell-menu-button {
+    margin-right: 8px;
+}
+
+.pill-button {
+    height: 34px;
+    padding: 0 16px;
+    border-radius: 17px;
+    border-width: 0;
+    background-color: rgb(31, 31, 31);
+    color: rgb(255, 255, 255);
+    font-size: 14px;
+    letter-spacing: 1.4px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    transition-property: background-color;
+    transition-duration: 0.12s;
+}
+
+.pill-button:hover {
+    background-color: rgb(47, 47, 47);
+}
+
+.pill-button:active {
+    background-color: rgb(58, 58, 58);
+}
+
+.pill-button:disabled {
+    opacity: 0.4;
+}
+
+.pill-button.accent {
+    background-color: rgb(30, 215, 96);
+    color: rgb(0, 0, 0);
+}
+
+.pill-button.accent:hover {
+    background-color: rgb(29, 185, 84);
+}

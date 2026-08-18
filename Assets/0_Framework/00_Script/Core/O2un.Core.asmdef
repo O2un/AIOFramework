@@ -3,9 +3,11 @@
     "rootNamespace": "O2un",
     "references": [
         "UniTask",
+        "UniTask.Addressables",
         "R3.Unity",
         "Unity.Addressables",
-        "Unity.ResourceManager"
+        "Unity.ResourceManager",
+        "Unity.Localization"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
