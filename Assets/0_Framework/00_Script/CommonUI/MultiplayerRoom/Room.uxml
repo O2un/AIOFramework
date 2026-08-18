@@ -1,0 +1,24 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/0_Framework/00_Script/CommonUI/MultiplayerRoom/Room.uss"/>
+    <Style src="project://database/Assets/0_Framework/00_Script/CommonUI/UIToolkit/Common.uss"/>
+    <ui:VisualElement name="RoomRoot" class="room">
+        <ui:VisualElement class="room-header">
+            <ui:VisualElement class="room-title-area">
+                <ui:Label text="ROOM" class="room-title"/>
+                <ui:Label name="RoomCodeLabel" text="----" class="room-code"/>
+            </ui:VisualElement>
+            <ui:Label name="RoomRoleLabel" text="CLIENT" class="room-role"/>
+        </ui:VisualElement>
+        <ui:VisualElement class="room-body">
+            <ui:VisualElement class="room-panel-header">
+                <ui:Label text="참가자" class="room-panel-title"/>
+                <ui:Label name="PlayerCountLabel" text="0" class="room-player-count"/>
+            </ui:VisualElement>
+            <ui:ListView name="PlayerList" class="room-player-list"/>
+        </ui:VisualElement>
+        <ui:VisualElement class="room-footer">
+            <ui:Button name="LeaveRoomButton" text="퇴장" class="room-button outlined"/>
+            <ui:Button name="StartGameButton" text="게임 시작" class="room-button accent u-invisible"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

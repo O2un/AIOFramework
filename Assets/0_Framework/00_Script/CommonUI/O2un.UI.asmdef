@@ -3,6 +3,7 @@
     "rootNamespace": "O2un.UI",
     "references": [
         "O2un.Core",
+        "O2un.Network",
         "O2un.SubSystem",
         "UniTask",
         "R3.Unity",

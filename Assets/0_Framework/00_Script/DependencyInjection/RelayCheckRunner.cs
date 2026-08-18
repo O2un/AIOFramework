@@ -8,10 +8,11 @@ using VContainer.Unity;
 namespace O2un.DI
 {
     /// <summary>
-    /// 로비 Scene 이 살아 있는 동안만 RelayCheck 를 세션에 붙인다.
+    /// 등록된 Scene 이 살아 있는 동안만 RelayCheck 를 세션에 붙인다. 진입할 때마다 한 번 왕복을 돌려
+    /// 그 Scene 에서 세션이 살아 있는지 로그로 남긴다.
     /// 어떤 기능 Module 을 쓰는지는 게임이 정하므로 프레임워크 Manager 는 이 기능을 알지 못한다.
     /// </summary>
-    public sealed class RelayCheckLobbyRunner : IInitializable, IDisposable
+    public sealed class RelayCheckRunner : IInitializable, IDisposable
     {
         private static readonly TimeSpan ECHO_TIMEOUT = TimeSpan.FromSeconds(5);
 
@@ -22,7 +23,7 @@ namespace O2un.DI
         // 세션마다 Messenger 가 새로 열린다. 이전 세션 스트림 구독을 놓지 않으면 세션 수만큼 겹쳐 받는다.
         private readonly SerialDisposable _receiveSubscription = new();
 
-        public RelayCheckLobbyRunner(IMultiplayerManager multiplayer)
+        public RelayCheckRunner(IMultiplayerManager multiplayer)
         {
             _multiplayer = multiplayer;
             _relayCheck = new RelayCheckP2PModule(multiplayer);

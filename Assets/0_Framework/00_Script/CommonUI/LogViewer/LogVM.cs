@@ -46,6 +46,10 @@ namespace O2un.UI
 
             _statusText.Value = "Loading current runtime log...";
             _logDataList.AddRange(await _manager.ReadCurrentLogFileFromAsync());
+
+            // Play 를 끄면 이 await 가 Dispose 뒤에 깨어난다. _statusText 는 그때 이미 닫혀 있다.
+            if (true == IsDisposed) return;
+
             _statusText.Value = "Loaded";
             _isDirty = true;
 

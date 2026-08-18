@@ -66,6 +66,13 @@ namespace O2un.Utils
 
         public static AsyncHandle StartAsync(this ISafeDisposable safeClass, TaskFunction taskFunc)
         {
+            // Play 를 끄면 UniTask 가 대기 중이던 continuation 을 마저 돌린다.
+            // Dispose 가 먼저 끝난 뒤라 DisposableR3 에 Add 하면 ObjectDisposedException 이다.
+            if (true == safeClass.IsDisposed)
+            {
+                return new(UniTask.CompletedTask, Disposable.Empty);
+            }
+
             var (token, trigger) = CreateCancelContext();
             safeClass.DisposableR3.Add(trigger);
             var task = WrapTaskAsync(safeClass, taskFunc, token, trigger);
@@ -75,6 +82,11 @@ namespace O2un.Utils
         public static AsyncHandle StartExclusiveAsync(this ISafeDisposable safeClass, string key, TaskFunction taskFunc)
         {
             // RuntimeAuditor.AssertStringIsLiteral(key);
+
+            if (true == safeClass.IsDisposed)
+            {
+                return new(UniTask.CompletedTask, Disposable.Empty);
+            }
 
             if (!safeClass.ExclusiveTasks.TryGetValue(key, out var serialHandler))
             {

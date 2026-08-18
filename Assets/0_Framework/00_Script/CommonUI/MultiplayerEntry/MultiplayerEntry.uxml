@@ -1,0 +1,39 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/0_Framework/00_Script/CommonUI/MultiplayerEntry/MultiplayerEntry.uss"/>
+    <Style src="project://database/Assets/0_Framework/00_Script/CommonUI/UIToolkit/Common.uss"/>
+    <ui:VisualElement name="MultiplayerEntryRoot" class="multiplayer-entry">
+        <ui:VisualElement class="entry-header">
+            <ui:Label text="MULTIPLAYER" class="entry-title"/>
+            <ui:Label text="방을 만들거나 방 코드로 입장합니다." class="entry-subtitle"/>
+        </ui:VisualElement>
+        <ui:VisualElement class="entry-body">
+            <ui:VisualElement class="entry-actions">
+                <ui:VisualElement class="action-card">
+                    <ui:Label text="방 만들기" class="action-title"/>
+                    <ui:Label text="새 방을 열고 호스트가 됩니다." class="action-desc"/>
+                    <ui:Button name="CreateRoomButton" text="방 만들기" class="entry-button accent"/>
+                </ui:VisualElement>
+                <ui:VisualElement class="separator"/>
+                <ui:VisualElement class="action-card">
+                    <ui:Label text="코드로 입장" class="action-title"/>
+                    <ui:Label text="호스트에게 받은 방 코드를 입력합니다." class="action-desc"/>
+                    <ui:TextField name="RoomCodeField" max-length="8" class="code-field"/>
+                    <ui:Button name="JoinRoomButton" text="입장" class="entry-button"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement class="room-list-panel">
+                <ui:VisualElement class="panel-header">
+                    <ui:Label text="방 목록" class="panel-title"/>
+                    <ui:Button name="RefreshRoomListButton" text="새로고침" class="entry-button outlined small"/>
+                </ui:VisualElement>
+                <ui:VisualElement class="room-list-area">
+                    <ui:ListView name="RoomList" class="room-list"/>
+                    <ui:VisualElement name="RoomListEmpty" picking-mode="Ignore" class="empty-state">
+                        <ui:Label text="열려 있는 방이 없습니다." class="empty-title"/>
+                        <ui:Label text="새로고침하거나 방을 직접 만들어 보세요." class="empty-subtitle"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
