@@ -26,6 +26,24 @@ namespace O2un.Core.Localization
             Key = key;
         }
 
+        private LocKey(string table, string key)
+        {
+            Table = table;
+            Key = key;
+        }
+
+        /// <summary>
+        /// 게임 어셈블리의 생성된 테이블 enum 이 들어오는 통로.
+        ///
+        /// <see cref="LocalTable"/> 은 프레임워크 테이블만 담으므로 게임 테이블은 이 타입으로 받을 수 없고,
+        /// 프레임워크가 게임 어셈블리를 참조할 수도 없다. 호출부가 생문자열을 적지 않게 하려는 것이 목적이므로
+        /// 생성된 <c>Key(this GameLocalTable, string)</c> 확장 말고 직접 부르지 않는다.
+        /// </summary>
+        public static LocKey FromTableName(string table, string key)
+        {
+            return new LocKey(table, key);
+        }
+
         /// <summary>
         /// 지금 언어로 한 번 조회한다. 언어가 바뀌어도 이 값은 그대로다 —
         /// 계속 따라가야 하는 자리에는 <see cref="RuntimeLocString"/> 을 쓴다.

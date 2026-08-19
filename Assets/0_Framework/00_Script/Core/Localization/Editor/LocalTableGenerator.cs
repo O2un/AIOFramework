@@ -9,15 +9,30 @@ using UnityEditor.Localization;
 namespace O2un.Core.Localization.Editor
 {
     /// <summary>
-    /// String Table Collection 이름에서 <c>LocalTable</c> enum 을 뽑는다.
+    /// String Table Collection 이름에서 테이블 enum 을 뽑는다.
     ///
     /// Roslyn 소스 제너레이터로는 못 만든다 — 테이블은 컴파일에 들어가지 않는 에셋이라
     /// 컴파일러가 볼 수 없다. 그래서 Editor 쪽에서 파일을 직접 쓴다.
+    ///
+    /// 프레임워크 테이블과 게임 테이블은 각자의 어셈블리로 갈라 쓴다. 한 파일에 모으면
+    /// 게임이 테이블을 추가할 때마다 프레임워크 추적 파일이 바뀌어 upstream 싱크마다 충돌한다.
     /// </summary>
     public static class LocalTableGenerator
     {
-        private const string OUTPUT_PATH = "Assets/0_Framework/00_Script/Core/Localization/Generated/LocalTable.g.cs";
         private const string NONE_MEMBER = "None";
+
+        private const string FRAMEWORK_OUTPUT_PATH =
+            "Assets/0_Framework/00_Script/Core/Localization/Generated/LocalTable.g.cs";
+        private const string FRAMEWORK_NAMESPACE = "O2un.Core.Localization";
+        private const string FRAMEWORK_ENUM = "LocalTable";
+
+        // 단위 1 결정 2 — 게임이 만드는 모든 것은 이 아래 있다. 테이블 소유자를 이걸로 가른다.
+        private const string GAME_ROOT = "Assets/1_Game/";
+
+        private const string GAME_OUTPUT_PATH =
+            "Assets/1_Game/00_Script/Localization/Generated/GameLocalTable.g.cs";
+        private const string GAME_NAMESPACE = "Game.Localization";
+        private const string GAME_ENUM = "GameLocalTable";
 
         [MenuItem("O2un/Localization/Rebuild LocalTable")]
         public static void Rebuild()
@@ -31,25 +46,51 @@ namespace O2un.Core.Localization.Editor
         /// <summary>내용이 달라졌을 때만 쓴다. 같은 파일을 다시 쓰면 도메인 리로드만 도는 탓이다.</summary>
         public static bool TryWrite()
         {
-            string generated = Build(CollectTableNames());
+            CollectTableNames(out List<string> frameworkTables, out List<string> gameTables);
 
-            if (true == File.Exists(OUTPUT_PATH) && File.ReadAllText(OUTPUT_PATH) == generated)
+            bool wrote = WriteIfChanged(
+                FRAMEWORK_OUTPUT_PATH,
+                Build(FRAMEWORK_NAMESPACE, FRAMEWORK_ENUM, frameworkTables, emitLocKeyBridge: false));
+
+            if (0 == gameTables.Count)
+            {
+                // 게임 테이블이 사라졌는데 파일이 남으면 없는 테이블을 가리키는 enum 이 컴파일된다.
+                if (true == File.Exists(GAME_OUTPUT_PATH))
+                {
+                    AssetDatabase.DeleteAsset(GAME_OUTPUT_PATH);
+                    wrote = true;
+                }
+
+                return wrote;
+            }
+
+            bool wroteGame = WriteIfChanged(
+                GAME_OUTPUT_PATH,
+                Build(GAME_NAMESPACE, GAME_ENUM, gameTables, emitLocKeyBridge: true));
+
+            return true == wrote || true == wroteGame;
+        }
+
+        private static bool WriteIfChanged(string path, string generated)
+        {
+            if (true == File.Exists(path) && File.ReadAllText(path) == generated)
             {
                 return false;
             }
 
-            Directory.CreateDirectory(Path.GetDirectoryName(OUTPUT_PATH));
-            File.WriteAllText(OUTPUT_PATH, generated);
-            AssetDatabase.ImportAsset(OUTPUT_PATH);
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            File.WriteAllText(path, generated);
+            AssetDatabase.ImportAsset(path);
 
-            Log.Print(Log.LogLevel.Info, $"LocalTable 을 다시 생성했다. ({OUTPUT_PATH})");
+            Log.Print(Log.LogLevel.Info, $"테이블 enum 을 다시 생성했다. ({path})");
 
             return true;
         }
 
-        private static List<string> CollectTableNames()
+        private static void CollectTableNames(out List<string> frameworkTables, out List<string> gameTables)
         {
-            List<string> names = new();
+            frameworkTables = new List<string>();
+            gameTables = new List<string>();
 
             foreach (StringTableCollection collection in LocalizationEditorSettings.GetStringTableCollections())
             {
@@ -63,15 +104,29 @@ namespace O2un.Core.Localization.Editor
                     continue;
                 }
 
-                names.Add(collection.TableCollectionName);
+                if (true == IsGameOwned(collection))
+                {
+                    gameTables.Add(collection.TableCollectionName);
+                }
+                else
+                {
+                    frameworkTables.Add(collection.TableCollectionName);
+                }
             }
 
-            names.Sort(StringComparer.Ordinal);
-
-            return names;
+            frameworkTables.Sort(StringComparer.Ordinal);
+            gameTables.Sort(StringComparer.Ordinal);
         }
 
-        private static string Build(List<string> tableNames)
+        private static bool IsGameOwned(StringTableCollection collection)
+        {
+            string path = AssetDatabase.GetAssetPath(collection);
+
+            return false == string.IsNullOrEmpty(path)
+                && true == path.StartsWith(GAME_ROOT, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string Build(string namespaceName, string enumName, List<string> tableNames, bool emitLocKeyBridge)
         {
             StringBuilder builder = new();
 
@@ -82,9 +137,16 @@ namespace O2un.Core.Localization.Editor
             builder.AppendLine("// </auto-generated>");
             builder.AppendLine("//------------------------------------------------------------------------------");
             builder.AppendLine();
-            builder.AppendLine("namespace O2un.Core.Localization");
+
+            if (true == emitLocKeyBridge)
+            {
+                builder.AppendLine("using O2un.Core.Localization;");
+                builder.AppendLine();
+            }
+
+            builder.AppendLine($"namespace {namespaceName}");
             builder.AppendLine("{");
-            builder.AppendLine("    public enum LocalTable");
+            builder.AppendLine($"    public enum {enumName}");
             builder.AppendLine("    {");
             builder.AppendLine($"        {NONE_MEMBER} = 0,");
 
@@ -97,21 +159,31 @@ namespace O2un.Core.Localization.Editor
 
             builder.AppendLine("    }");
             builder.AppendLine();
-            builder.AppendLine("    public static class LocalTableExtensions");
+            builder.AppendLine($"    public static class {enumName}Extensions");
             builder.AppendLine("    {");
-            builder.AppendLine("        public static string ToTableName(this LocalTable table)");
+            builder.AppendLine($"        public static string ToTableName(this {enumName} table)");
             builder.AppendLine("        {");
             builder.AppendLine("            return table switch");
             builder.AppendLine("            {");
 
             for (int i = 0; i < members.Count; ++i)
             {
-                builder.AppendLine($"                LocalTable.{members[i]} => \"{tableNames[i]}\",");
+                builder.AppendLine($"                {enumName}.{members[i]} => \"{tableNames[i]}\",");
             }
 
             builder.AppendLine("                _ => string.Empty,");
             builder.AppendLine("            };");
             builder.AppendLine("        }");
+
+            if (true == emitLocKeyBridge)
+            {
+                builder.AppendLine();
+                builder.AppendLine($"        public static LocKey Key(this {enumName} table, string key)");
+                builder.AppendLine("        {");
+                builder.AppendLine("            return LocKey.FromTableName(table.ToTableName(), key);");
+                builder.AppendLine("        }");
+            }
+
             builder.AppendLine("    }");
             builder.AppendLine("}");
 
