@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd424a21f03db41789cbf4b3ea11ec59, type: 3}
   m_Name: StaticDataConfig
   m_EditorClassIdentifier: Assembly-CSharp::O2un.Data.StaticDataConfig
-  BINARYPATH: Assets/Framework/30_Data/Binary
+  BINARYPATH: Assets/0_Framework/30_Data/Binary/
   BINARYSUFFIX: .txt
