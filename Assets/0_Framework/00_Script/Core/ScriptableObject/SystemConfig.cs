@@ -81,13 +81,22 @@ namespace O2un.Core
     
     public abstract class GlobalConfig<T> : SystemConfig<T>, IGlobalConfig where T : GlobalConfig<T>
     {
-        // ConfigAssetRoot 로 옮길 때도 끝은 Resources 폴더여야 한다. 아니면 RUNTIME_PATH 로 못 읽는다.
         private const string DEFAULT_ROOT = "Assets/Resources";
 
         public static string PATH => $"{ResolveAssetRoot(DEFAULT_ROOT)}/SystemConfig/{typeof(T).Name}.asset";
         public static string RUNTIME_PATH => $"SystemConfig/{typeof(T).Name}";
     
-        public static T GetConfig() => GetOrCreateSettings(PATH);
+        public static T GetConfig()
+        {
+    #if UNITY_EDITOR
+            // Resources 밖에 만들면 자산은 멀쩡해 보이는데 LoadRuntime 이 조용히 못 읽는다.
+            if (false == PATH.Contains("/Resources/"))
+            {
+                Log.Print(Log.LogLevel.Error, $"ConfigAssetRoot 가 Resources 밖이다: {PATH}");
+            }
+    #endif
+            return GetOrCreateSettings(PATH);
+        }
     
         public static T LoadRuntime()
         {
