@@ -1,0 +1,1 @@
+{"name":"Game.Editor","rootNamespace":"Game","references":["Game","O2un.Core","O2un.SubSystem","O2un.UI","O2un.DI","UniTask","VContainer","R3.Unity"],"includePlatforms":["Editor"],"excludePlatforms":[],"allowUnsafeCode":false,"overrideReferences":false,"precompiledReferences":[],"autoReferenced":true,"defineConstraints":[],"versionDefines":[],"noEngineReferences":false}

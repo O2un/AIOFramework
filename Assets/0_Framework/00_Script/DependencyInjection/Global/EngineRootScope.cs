@@ -23,6 +23,7 @@ namespace O2un.DI
 
             builder.RegisterEntryPoint<EngineBootStrapper>();
             builder.RegisterDebugModules();
+            builder.RegisterGameInstallers();
         }
 
         private void RegisterProviders(IContainerBuilder builder)

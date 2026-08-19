@@ -24,3 +24,16 @@ ProjectSettings/*.asset text eol=lf
 *.uxml text eol=lf
 *.uss text eol=lf
 *.inputactions text eol=lf
+
+# Unity YAML 은 서로 다른 항목을 추가한 것뿐인 변경에서도 텍스트 머지가 충돌한다.
+# UnityYAMLMerge 로 구조 머지하되, 실행 경로는 머신·Unity 버전마다 달라 여기 적지 않는다.
+# 클론마다 한 번씩 아래를 설정해야 하고, 없으면 git 이 조용히 텍스트 머지로 떨어진다.
+#
+#   git config merge.unityyamlmerge.driver #     "'<Unity>/Editor/Data/Tools/UnityYAMLMerge.exe' merge -p --force --fallback none %O %B %A %A"
+#
+# .meta 는 붙이지 않는다. 그 충돌은 같은 경로에 서로 다른 GUID 를 넣은 것이라 사람이 고른다.
+*.unity merge=unityyamlmerge
+*.prefab merge=unityyamlmerge
+*.asset merge=unityyamlmerge
+*.controller merge=unityyamlmerge
+*.anim merge=unityyamlmerge
