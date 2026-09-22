@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using ExcelDataReader;
 using O2un.Core;
@@ -10,23 +11,73 @@ namespace O2un.Data
 {
     public abstract partial class StaticDataManager<T> : IStaticDataManager where T : StaticData, new()
     {
+        private const string INDEX_TYPE = "index";
+        private const string GROUP_TYPE = "group";
+
+        private string _indexColumn;
+        private string _groupColumn;
+
         protected UniqueKey LoadKey(Dictionary<string, string> row)
         {
-            if (!row.TryGetValue("index", out var indexStr) || !int.TryParse(indexStr, out int index))
+            string indexColumn = true == string.IsNullOrEmpty(_indexColumn) ? INDEX_TYPE : _indexColumn;
+
+            if (false == row.TryGetValue(indexColumn, out string indexText) ||
+                false == int.TryParse(indexText, out int index))
             {
-                Log.Print(Log.LogLevel.Error, "Key(Index)가 비정상입니다 Index는 무조건 존재해야 하며 숫자여야 합니다");
+                Log.Print(Log.LogLevel.Error, $"Key(Index)가 비정상입니다. 타입이 index 인 칼럼({indexColumn})은 무조건 존재해야 하며 숫자여야 합니다");
                 return UniqueKey.Undefined;
             }
-            
-            int group = 0;
-            if (!row.TryGetValue("group", out var groupStr) || false != int.TryParse(groupStr, out group))
+
+            if (true == string.IsNullOrEmpty(_groupColumn) ||
+                false == row.TryGetValue(_groupColumn, out string groupText) ||
+                true == string.IsNullOrEmpty(groupText))
             {
-                return new UniqueKey(group, index);
+                return new UniqueKey(0, index);
             }
-            Log.Print(Log.LogLevel.Error, "Key(Group)가 비정상입니다 Group은 무조건 숫자여야 합니다.");
-            return UniqueKey.Undefined;
+
+            if (false == int.TryParse(groupText, out int group))
+            {
+                Log.Print(Log.LogLevel.Error, $"Key(Group)가 비정상입니다. 칼럼({_groupColumn})은 숫자여야 합니다");
+                return UniqueKey.Undefined;
+            }
+
+            return new UniqueKey(group, index);
+        }
+
+        // 생성기는 키 칼럼을 타입 행으로 가려내 생성에서 빼므로 파싱도 같은 기준이어야 한다.
+        // 이름으로 찾으면 칼럼 이름이 index 가 아닌 순간 생성은 멀쩡한데 파싱만 0건이 된다.
+        private void ResolveKeyColumns(DataTable table, List<string> columnNames)
+        {
+            _indexColumn = null;
+            _groupColumn = null;
+
+            for (int i = 0; i < columnNames.Count; ++i)
+            {
+                string type = table.Rows[1][i]?.ToString()?.Trim().ToLowerInvariant();
+
+                if (INDEX_TYPE == type)
+                {
+                    _indexColumn = columnNames[i];
+                }
+                else if (GROUP_TYPE == type)
+                {
+                    _groupColumn = columnNames[i];
+                }
+            }
         }
         
+#if UNITY_EDITOR
+        // ReadExcelAndParse 는 [Conditional] 이라 인터페이스 멤버가 될 수 없다 (CS0629).
+        // 굽기 도구가 비제네릭 IStaticDataManager 로 부를 수 있게 감싼다.
+        public void BakeFromExcel(string excelPath, string sheetName)
+        {
+            Clear();
+            ReadExcelAndParse(excelPath, sheetName);
+            CompleteLoad();
+            SaveToBinary();
+        }
+#endif
+
         [System.Diagnostics.Conditional("UNITY_EDITOR")]
         protected void ReadExcelAndParse(string excelPath, string sheetName)
         {
@@ -56,6 +107,8 @@ namespace O2un.Data
             {
                 columnNames.Add(table.Rows[0][i]?.ToString()?.Trim() ?? string.Empty);
             }
+
+            ResolveKeyColumns(table, columnNames);
 
             for (int i = 2; i < table.Rows.Count; i++)
             {
