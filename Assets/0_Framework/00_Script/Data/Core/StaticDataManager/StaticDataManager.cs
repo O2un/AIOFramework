@@ -19,7 +19,7 @@ namespace O2un.Data
 
     public abstract partial class StaticDataManager<T> : IStaticDataManager where T : StaticData, new()
     {
-        protected ImmutableDictionary<UniqueKey, T> DataList { get; private protected set; } = ImmutableDictionary<UniqueKey, T>.Empty;
+        protected ImmutableDictionary<UniqueKey, T> DataList { get; set; } = ImmutableDictionary<UniqueKey, T>.Empty;
 
         private UniTaskCompletionSource _initCompletionSource;
         public bool IsLoaded {get; private set;}
