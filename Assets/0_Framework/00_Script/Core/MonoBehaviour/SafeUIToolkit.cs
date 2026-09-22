@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using O2un.Roslyn.Analyzer;
@@ -65,12 +65,22 @@ namespace O2un.Core
                     $"{GetType().Name} requires a {nameof(UIDocument)} component.");
             }
 
-            // UIDocument builds its visual tree during its enable lifecycle. Do not rely on
-            // component execution order when SafeMono initializes from Awake/OnEnable.
-            await UniTask.WaitUntil(
-                () => _uiDocument.rootVisualElement != null,
-                PlayerLoopTiming.Update,
-                ct);
+            // SafeEnable may have kept the document off so the tree never reached the panel.
+            // Re-enabling runs its OnEnable inline, so the tree is back before the next line.
+            _uiDocument.enabled = true;
+
+            // Everything below must stay on this frame's synchronous path: once the tree is
+            // attached the panel renders it at the authored visibility, and WaitUntil yields a
+            // whole frame even when its predicate already holds.
+            if (null == _uiDocument.rootVisualElement)
+            {
+                // UIDocument builds its visual tree during its enable lifecycle. Do not rely on
+                // component execution order when SafeMono initializes from Awake/OnEnable.
+                await UniTask.WaitUntil(
+                    () => _uiDocument.rootVisualElement != null,
+                    PlayerLoopTiming.Update,
+                    ct);
+            }
 
             VisualElement documentRoot = _uiDocument.rootVisualElement;
 
@@ -92,6 +102,22 @@ namespace O2un.Core
                 : UITransitionState.Hidden;
 
             ApplySettledState(_isVisibleOnInit);
+        }
+
+        [MustCallBase]
+        protected override void SafeEnable()
+        {
+            base.SafeEnable();
+
+            if (ReadyState.Created != State) return;
+            if (true == _isVisibleOnInit) return;
+
+            _uiDocument ??= GetComponent<UIDocument>();
+            if (null == _uiDocument) return;
+
+            // Init runs after DI injection, so the tree would render at its authored visibility
+            // for one or more frames before ApplySettledState hides it. Keep it off until then.
+            _uiDocument.enabled = false;
         }
 
         /// <summary>

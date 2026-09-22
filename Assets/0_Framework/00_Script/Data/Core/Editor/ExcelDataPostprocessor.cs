@@ -5,17 +5,68 @@ using System.Linq;
 using System.Text;
 using ExcelDataReader;
 using UnityEditor;
-using UnityEngine;
 
 [InitializeOnLoad]
 public class ExcelDataPostprocessor : AssetPostprocessor
 {
+    private const string FRAMEWORK_NAMESPACE = "O2un.Data";
+    private const string GAME_NAMESPACE = "Game.Data";
+
     private static ExcelEditorConfig _config;
     public static ExcelEditorConfig Config => _config ??= ExcelEditorConfig.GetConfig();
+
+    /// <summary>
+    /// Excel 한 장이 어디로 생성될지를 소유자별로 묶는다. 소유자는 Excel 이 놓인 폴더로 갈린다 —
+    /// 시트나 별도 목록에 적게 하면 등록을 빠뜨린 Excel 이 조용히 프레임워크 폴더로 생성된다.
+    /// </summary>
+    private sealed class OwnerTarget
+    {
+        public string ExcelDirectory;
+        public string GeneratedScriptDirectory;
+        public string StaticDataScriptDirectory;
+        public string Namespace;
+        public bool IsGame;
+    }
 
     static ExcelDataPostprocessor()
     {
         EditorApplication.delayCall += CheckAllExcelFilesOnStartup;
+    }
+
+    private static List<OwnerTarget> BuildTargets()
+    {
+        var targets = new List<OwnerTarget>();
+
+        if (null == Config)
+        {
+            return targets;
+        }
+
+        if (false == string.IsNullOrEmpty(Config.ExcelDirectory))
+        {
+            targets.Add(new OwnerTarget
+            {
+                ExcelDirectory = Config.ExcelDirectory,
+                GeneratedScriptDirectory = Config.GeneratedScriptDirectory,
+                StaticDataScriptDirectory = Config.StaticDataScriptDirectory,
+                Namespace = FRAMEWORK_NAMESPACE,
+                IsGame = false,
+            });
+        }
+
+        if (false == string.IsNullOrEmpty(Config.GameExcelDirectory))
+        {
+            targets.Add(new OwnerTarget
+            {
+                ExcelDirectory = Config.GameExcelDirectory,
+                GeneratedScriptDirectory = Config.GameGeneratedScriptDirectory,
+                StaticDataScriptDirectory = Config.GameStaticDataScriptDirectory,
+                Namespace = GAME_NAMESPACE,
+                IsGame = true,
+            });
+        }
+
+        return targets;
     }
 
     private static void CheckAllExcelFilesOnStartup()
@@ -26,45 +77,27 @@ public class ExcelDataPostprocessor : AssetPostprocessor
             return;
         SessionState.SetBool("ExcelDataPostprocessor_Initialized", true);
 
-        if (Config == null || string.IsNullOrEmpty(Config.ExcelDirectory)) return;
-
-        string fullPath = Path.GetFullPath(Config.ExcelDirectory);
-        if (!Directory.Exists(fullPath)) return;
-        
-        string[] excelFiles = Directory.GetFiles(fullPath, "*.xlsx", SearchOption.AllDirectories)
-            .Where(path => !path.Contains("~$"))
-            .ToArray();
-
-        if (excelFiles.Length == 0) return;
-
-        EnsureDirectoriesExist();
-
-        foreach (var file in excelFiles)
-        {
-            ProcessExcelFile(file);
-        }
-        
-        Debug.Log("[ExcelDataPostprocessor] 에디터 시작 중 엑셀 변경 사항을 감지하여 스크립트를 갱신했습니다.");
-        AssetDatabase.Refresh();
-    }
-
-    private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
-    {
-        var targetAssets = importedAssets.Concat(movedAssets)
-            .Where(path => path.StartsWith(Config.ExcelDirectory) && path.EndsWith(".xlsx") && !path.Contains("~$"))
-            .ToList();
-
-        if (targetAssets.Count == 0) return;
-
-        EnsureDirectoriesExist();
-
         bool isChanged = false;
 
-        foreach (var assetPath in targetAssets)
+        foreach (var target in BuildTargets())
         {
-            if (ProcessExcelFile(assetPath))
+            string fullPath = Path.GetFullPath(target.ExcelDirectory);
+            if (false == Directory.Exists(fullPath)) continue;
+
+            string[] excelFiles = Directory.GetFiles(fullPath, "*.xlsx", SearchOption.AllDirectories)
+                .Where(path => !path.Contains("~$"))
+                .ToArray();
+
+            if (0 == excelFiles.Length) continue;
+
+            EnsureDirectoriesExist(target);
+
+            foreach (var file in excelFiles)
             {
-                isChanged = true;
+                if (ProcessExcelFile(target, file))
+                {
+                    isChanged = true;
+                }
             }
         }
 
@@ -74,16 +107,45 @@ public class ExcelDataPostprocessor : AssetPostprocessor
         }
     }
 
-    private static void EnsureDirectoriesExist()
+    private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
     {
-        if (!Directory.Exists(Config.GeneratedScriptDirectory)) Directory.CreateDirectory(Config.GeneratedScriptDirectory);
+        bool isChanged = false;
 
-        if (!Directory.Exists(Config.StaticDataScriptDirectory)) Directory.CreateDirectory(Config.StaticDataScriptDirectory);
-        if (!Directory.Exists(Config.StaticDataScriptDirectory+"/StaticData")) Directory.CreateDirectory(Config.StaticDataScriptDirectory+"/StaticData");
-        if (!Directory.Exists(Config.StaticDataScriptDirectory+"/Manager")) Directory.CreateDirectory(Config.StaticDataScriptDirectory+"/Manager");
+        foreach (var target in BuildTargets())
+        {
+            var targetAssets = importedAssets.Concat(movedAssets)
+                .Where(path => path.StartsWith(target.ExcelDirectory) && path.EndsWith(".xlsx") && !path.Contains("~$"))
+                .ToList();
+
+            if (0 == targetAssets.Count) continue;
+
+            EnsureDirectoriesExist(target);
+
+            foreach (var assetPath in targetAssets)
+            {
+                if (ProcessExcelFile(target, assetPath))
+                {
+                    isChanged = true;
+                }
+            }
+        }
+
+        if (isChanged)
+        {
+            AssetDatabase.Refresh();
+        }
     }
 
-    private static bool ProcessExcelFile(string excelPath)
+    private static void EnsureDirectoriesExist(OwnerTarget target)
+    {
+        if (!Directory.Exists(target.GeneratedScriptDirectory)) Directory.CreateDirectory(target.GeneratedScriptDirectory);
+
+        if (!Directory.Exists(target.StaticDataScriptDirectory)) Directory.CreateDirectory(target.StaticDataScriptDirectory);
+        if (!Directory.Exists(target.StaticDataScriptDirectory+"/StaticData")) Directory.CreateDirectory(target.StaticDataScriptDirectory+"/StaticData");
+        if (!Directory.Exists(target.StaticDataScriptDirectory+"/Manager")) Directory.CreateDirectory(target.StaticDataScriptDirectory+"/Manager");
+    }
+
+    private static bool ProcessExcelFile(OwnerTarget target, string excelPath)
     {
         using var stream = File.Open(excelPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         using var reader = ExcelReaderFactory.CreateReader(stream);
@@ -96,7 +158,7 @@ public class ExcelDataPostprocessor : AssetPostprocessor
             if (table.Rows.Count < 2) continue;
 
             string sheetName = table.TableName;
-            
+
             var names = new List<string>();
             var types = new List<string>();
 
@@ -117,22 +179,25 @@ public class ExcelDataPostprocessor : AssetPostprocessor
                 types.Add(type);
             }
 
-            GenerateMainScriptsIfNotExists(sheetName);
-            GenerateGeneratedDataScript(sheetName, names, types);
+            GenerateMainScriptsIfNotExists(target, sheetName);
+            GenerateGeneratedDataScript(target, sheetName, names, types);
         }
 
         return true;
     }
 
-    private static void GenerateMainScriptsIfNotExists(string sheetName)
+    private static void GenerateMainScriptsIfNotExists(OwnerTarget target, string sheetName)
     {
-        string dataScriptPath = Path.Combine(Config.StaticDataScriptDirectory, "StaticData", $"{sheetName}StaticData.cs");
-        string managerScriptPath = Path.Combine(Config.StaticDataScriptDirectory, "Manager", $"{sheetName}StaticDataManager.cs");
+        string dataScriptPath = Path.Combine(target.StaticDataScriptDirectory, "StaticData", $"{sheetName}StaticData.cs");
+        string managerScriptPath = Path.Combine(target.StaticDataScriptDirectory, "Manager", $"{sheetName}StaticDataManager.cs");
+
+        // 프레임워크 밖 네임스페이스는 StaticData / StaticDataManager<T> 를 using 으로 끌어와야 한다.
+        string dataUsing = true == target.IsGame ? $"using {FRAMEWORK_NAMESPACE};{System.Environment.NewLine}{System.Environment.NewLine}" : string.Empty;
 
         if (!File.Exists(dataScriptPath))
         {
-            string dataTemplate = 
-$@"namespace O2un.Data
+            string dataTemplate =
+$@"{dataUsing}namespace {target.Namespace}
 {{
     public partial class {sheetName}StaticData : StaticData
     {{
@@ -151,15 +216,15 @@ $@"namespace O2un.Data
 
         if (!File.Exists(managerScriptPath))
         {
-            string managerTemplate = 
-$@"namespace O2un.Data
+            string managerTemplate =
+$@"{dataUsing}namespace {target.Namespace}
 {{
     public partial class {sheetName}StaticDataManager : StaticDataManager<{sheetName}StaticData>
     {{
         protected override void SetProcess()
         {{
         }}
-        //protected override void LinkProcess()
+        protected override void LinkProcess()
         {{
         }}
     }}
@@ -168,12 +233,18 @@ $@"namespace O2un.Data
         }
     }
 
-    private static void GenerateGeneratedDataScript(string sheetName, List<string> names, List<string> types)
+    private static void GenerateGeneratedDataScript(OwnerTarget target, string sheetName, List<string> names, List<string> types)
     {
-        string generatedPath = Path.Combine(Config.GeneratedScriptDirectory, $"{sheetName}StaticData.g.cs");
+        string generatedPath = Path.Combine(target.GeneratedScriptDirectory, $"{sheetName}StaticData.g.cs");
         var sb = new StringBuilder();
+
+        if (true == target.IsGame)
+        {
+            sb.AppendLine($"using {FRAMEWORK_NAMESPACE};");
+        }
+
         sb.AppendLine("using O2un.Roslyn.Generator;");
-        sb.AppendLine("namespace O2un.Data");
+        sb.AppendLine($"namespace {target.Namespace}");
         sb.AppendLine("{");
         sb.AppendLine("    [O2un.Roslyn.Generator.StaticData]");
         sb.AppendLine($"    public partial class {sheetName}StaticData");
@@ -188,6 +259,21 @@ $@"namespace O2un.Data
         }
 
         sb.AppendLine("    }");
+
+        // 손편집 매니저가 아니라 여기에 쓴다. 지워도 다음 임포트에서 되살아나야
+        // 게임 데이터가 프레임워크 Binary 폴더로 구워지는 일이 없다.
+        if (true == target.IsGame)
+        {
+            sb.AppendLine();
+            sb.AppendLine($"    public partial class {sheetName}StaticDataManager");
+            sb.AppendLine("    {");
+            sb.AppendLine("        protected override string ResolveBinaryDirectory(StaticDataConfig config)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            return config.GAME_BINARYPATH;");
+            sb.AppendLine("        }");
+            sb.AppendLine("    }");
+        }
+
         sb.AppendLine("}");
 
         File.WriteAllText(generatedPath, sb.ToString(), Encoding.UTF8);
@@ -196,7 +282,7 @@ $@"namespace O2un.Data
     private static string GetCSharpType(string rawType)
     {
         string lowerType = rawType.ToLowerInvariant();
-        
+
         return lowerType switch
         {
             "int" => "int",
