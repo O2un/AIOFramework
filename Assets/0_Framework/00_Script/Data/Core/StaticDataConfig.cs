@@ -5,6 +5,7 @@ namespace O2un.Data
     public class StaticDataConfig : GlobalConfig<StaticDataConfig>
     {
         public string BINARYPATH = "Assets/0_Framework/30_Data/Binary/";
+        public string GAME_BINARYPATH = "Assets/1_Game/30_Data/Binary/";
         public string BINARYSUFFIX = ".txt";
     }
 }
