@@ -11,6 +11,11 @@ namespace O2un.Data
     public interface IStaticDataManager
     {
         bool IsLoaded {get;}
+        int Count {get;}
+        string BinaryPath {get;}
+#if UNITY_EDITOR
+        void BakeFromExcel(string excelPath, string sheetName);
+#endif
         void Load(bool isLoadFromBinary = false, bool isLoadFromAddressables = false);
         void Set();
         void Link();
@@ -21,8 +26,9 @@ namespace O2un.Data
     {
         protected ImmutableDictionary<UniqueKey, T> DataList { get; set; } = ImmutableDictionary<UniqueKey, T>.Empty;
 
-        private UniTaskCompletionSource _initCompletionSource;
+        private UniTaskCompletionSource _initCompletionSource = new();
         public bool IsLoaded {get; private set;}
+        public int Count => DataList.Count;
         public UniTask WaitForLoadedAsync(CancellationToken cancellationToken = default)
         {
             if (IsLoaded) return UniTask.CompletedTask;
@@ -53,6 +59,15 @@ namespace O2un.Data
 
         public void Load(bool isLoadFromBinary = false, bool isLoadFromAddressable = false)
         {
+            Clear();
+
+            if (true == isLoadFromBinary)
+            {
+                LoadFromBinary();
+                return;
+            }
+
+            CompleteLoad();
         }
         
         public void Set()

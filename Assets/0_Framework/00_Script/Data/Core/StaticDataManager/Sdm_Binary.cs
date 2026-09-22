@@ -18,11 +18,25 @@ namespace O2un.Data
             return config.BINARYPATH;
         }
 
+        public string BinaryPath
+        {
+            get
+            {
+                var config = StaticDataConfig.LoadRuntime();
+                return null == config ? string.Empty : ResolveBinaryPath(config);
+            }
+        }
+
+        private string ResolveBinaryPath(StaticDataConfig config)
+        {
+            return ResolveBinaryDirectory(config) + typeof(T).Name + config.BINARYSUFFIX;
+        }
+
         [System.Diagnostics.Conditional("UNITY_EDITOR")]
         public void SaveToBinary()
         {
             var config = StaticDataConfig.GetConfig();
-            using var bw = BinaryHelper.SaveToBinary(ResolveBinaryDirectory(config) + typeof(T).Name + config.BINARYSUFFIX);
+            using var bw = BinaryHelper.SaveToBinary(ResolveBinaryPath(config));
             bw.Write(DataList.Count);
             foreach (var d in DataList)
             {
@@ -37,8 +51,19 @@ namespace O2un.Data
         protected void LoadFromBinary()
         {
             var config = StaticDataConfig.LoadRuntime();
+            if (null == config)
+            {
+                return;
+            }
 
-            using var br = BinaryHelper.LoadFromBinary(ResolveBinaryDirectory(config) + typeof(T).Name + config.BINARYSUFFIX);
+            // 굽지 않은 데이터를 읽으면 여기서 null 이 온다. 그대로 넘기면 NRE 로 죽어
+            // 어느 테이블이 비었는지가 사라진다. IsLoaded 를 false 로 남겨 진단이 집어낸다.
+            using var br = BinaryHelper.LoadFromBinary(ResolveBinaryPath(config));
+            if (null == br)
+            {
+                return;
+            }
+
             LoadInternal(br);
             CompleteLoad();
         }

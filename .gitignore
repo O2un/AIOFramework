@@ -108,3 +108,9 @@ Assets/0_Framework/00_Script/Core/CodeAnalyzer/.codeAnalyzer/CodeAnalyzer/bin/
 Assets/0_Framework/00_Script/Core/CodeAnalyzer/.codeAnalyzer/CodeAnalyzer/obj/
 Assets/0_Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/obj
 Assets/0_Framework/00_Script/Core/CodeGenerator/.codeGenerator/CodeGenerator/bin
+
+# StaticData 생성기가 Excel 에서 굽는 산출물. 소유자별로 갈라 나온다.
+Assets/0_Framework/30_Data/Binary/
+Assets/0_Framework/30_Data/Binary.meta
+Assets/1_Game/30_Data/Binary/
+Assets/1_Game/30_Data/Binary.meta
