@@ -1,0 +1,17 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="CheatPanel.uss"/>
+    <ui:VisualElement name="CheatRoot" picking-mode="Ignore" style="flex-grow: 1;">
+        <ui:VisualElement name="CheatPanel" class="cheat-panel">
+            <ui:VisualElement class="cheat-header">
+                <ui:VisualElement>
+                    <ui:Label text="CHEAT" class="cheat-title"/>
+                    <ui:Label text="Ctrl+Alt+C 두 번" class="cheat-hint"/>
+                </ui:VisualElement>
+                <ui:Button name="CheatClose" text="✕" class="cheat-close"/>
+            </ui:VisualElement>
+            <ui:ScrollView mode="Vertical">
+                <ui:VisualElement name="CheatBody"/>
+            </ui:ScrollView>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

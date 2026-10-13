@@ -21,6 +21,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Debug
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 66934405a48d3634d872b91dbf973408
+    m_Address: UI/Debug/CheatPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: c197c0c62429e42e8a1b981e0472d116, type: 2}
   m_SchemaSet:

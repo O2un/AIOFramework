@@ -1,0 +1,81 @@
+.cheat-panel {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 460px;
+    max-height: 90%;
+    flex-direction: column;
+    background-color: rgba(17, 19, 24, 0.94);
+    color: rgb(216, 222, 233);
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: rgb(38, 42, 52);
+    padding: 10px 12px;
+    font-size: 13px;
+}
+
+.cheat-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.cheat-title {
+    font-size: 16px;
+    -unity-font-style: bold;
+    color: rgb(243, 246, 251);
+}
+
+.cheat-hint {
+    color: rgb(143, 152, 168);
+    font-size: 11px;
+}
+
+.cheat-close {
+    min-width: 28px;
+    height: 24px;
+}
+
+.cheat-section {
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top-width: 1px;
+    border-color: rgb(38, 42, 52);
+}
+
+.cheat-section-title {
+    -unity-font-style: bold;
+    color: rgb(243, 246, 251);
+    margin-bottom: 4px;
+}
+
+.cheat-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.cheat-button {
+    height: 26px;
+    margin: 0 4px 4px 0;
+    padding: 0 8px;
+    border-radius: 6px;
+    background-color: rgb(36, 41, 54);
+    color: rgb(231, 236, 245);
+    border-width: 1px;
+    border-color: rgb(52, 58, 73);
+}
+
+.cheat-button:hover {
+    background-color: rgb(47, 53, 68);
+}
+
+.cheat-button:active {
+    background-color: rgb(58, 66, 84);
+}
+
+.cheat-status {
+    white-space: normal;
+    color: rgb(143, 200, 255);
+    margin-bottom: 4px;
+}
