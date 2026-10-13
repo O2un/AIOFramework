@@ -1,3 +1,4 @@
+using O2un.UI;
 using VContainer;
 using VContainer.Unity;
 
@@ -19,6 +20,8 @@ namespace O2un.DI
             builder.RegisterInstance(config);
 
             builder.Register<LogViewerModule>(Lifetime.Singleton).As<IDebugModule>();
+            builder.Register<CheatPanelModule>(Lifetime.Singleton).As<IDebugModule>();
+            builder.Register<TimeScaleCheat>(Lifetime.Singleton).As<ICheatProvider>();
 
             builder.RegisterEntryPoint<DebugBootstrap>();
         }

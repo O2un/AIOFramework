@@ -79,27 +79,11 @@ namespace O2un.UI
             _isDirty |= 0 != addedList.Count;
         }
 
-        // Ctrl+Alt+L 을 1초 안에 두 번 눌러야 토글된다. 오작동으로 열리는 것을 막기 위함.
         private void BindCommand()
         {
-            var comboStream = Observable.EveryUpdate().Where(_ => IsTogglePressed());
-
-            comboStream
-                .Select(_ => comboStream.Take(1).TakeUntil(Observable.Timer(TimeSpan.FromSeconds(1))))
-                .Switch()
-                .Subscribe(_ => SetVisible(false == IsVisible.CurrentValue))
-                .AddTo(DisposableR3);
-        }
-
-        private static bool IsTogglePressed()
-        {
-            Keyboard keyboard = Keyboard.current;
-
-            if (null == keyboard) return false;
-            if (false == keyboard.ctrlKey.isPressed) return false;
-            if (false == keyboard.altKey.isPressed) return false;
-
-            return keyboard[Key.L].wasPressedThisFrame;
+            DebugHotkey.CtrlAltDoublePress(Key.L)
+                       .Subscribe(_ => SetVisible(false == IsVisible.CurrentValue))
+                       .AddTo(DisposableR3);
         }
 
         private void Filter()
