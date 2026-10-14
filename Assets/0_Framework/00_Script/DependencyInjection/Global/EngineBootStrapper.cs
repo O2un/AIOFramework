@@ -38,7 +38,8 @@ namespace O2un.DI
             }
 
             // 부팅 화면이 이미 기다림을 보여 주므로 시작 씬은 SceneManager 의 로딩 씬을 거치지 않고 바로 연다.
-            await UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(startScene);
+            UnityEngine.AsyncOperation load = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(startScene);
+            await UniTask.WaitUntil(() => load.isDone, cancellationToken: cancellation);
         }
     }
 }
