@@ -12,14 +12,12 @@ namespace O2un.DI
     {
         private readonly IEnumerable<IRootTask> _rootTasks;
         private readonly IEnumerable<IStartupTask> _startupTasks;
-        private readonly ISceneManager _sceneManager;
 
         [Inject]
-        public EngineBootStrapper(IEnumerable<IRootTask> rootTasks, IEnumerable<IStartupTask> startupTasks, ISceneManager sceneManager)
+        public EngineBootStrapper(IEnumerable<IRootTask> rootTasks, IEnumerable<IStartupTask> startupTasks)
         {
             _rootTasks = rootTasks;
             _startupTasks = startupTasks;
-            _sceneManager = sceneManager;
         }
 
         public async UniTask StartAsync(CancellationToken cancellation = default)
@@ -39,7 +37,8 @@ namespace O2un.DI
                 return;
             }
 
-            await _sceneManager.LoadSceneAsync(startScene);
+            // 부팅 화면이 이미 기다림을 보여 주므로 시작 씬은 SceneManager 의 로딩 씬을 거치지 않고 바로 연다.
+            await UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(startScene);
         }
     }
 }
