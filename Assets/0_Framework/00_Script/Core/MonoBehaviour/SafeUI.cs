@@ -150,6 +150,16 @@ namespace O2un.Core
         }
 
         [MustCallBase]
+        protected override void SafeDisable()
+        {
+            base.SafeDisable();
+
+            _desiredVisible = false;
+            _transitionState = UITransitionState.Hidden;
+            SetVisibleState(false);
+        }
+
+        [MustCallBase]
         protected override void SafeDestroy()
         {
             _onTurnOnAfter.Dispose();
