@@ -81,6 +81,8 @@ namespace O2un
         private void OnDisable()
         {
             _disposableR3.Clear();
+            // Clear 가 키별 SerialDisposable 까지 dispose 한다 — 남겨 두면 다시 enable 한 뒤 같은 키 작업이 시작하자마자 취소된다.
+            _exclusiveTasks.Clear();
             SafeDisable();
         }
 
