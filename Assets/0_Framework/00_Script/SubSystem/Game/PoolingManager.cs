@@ -9,7 +9,7 @@ using VContainer.Unity;
 
 namespace O2un.Pooling
 {
-    public sealed class PoolingManager : GameSubsystemBase
+    public sealed class PoolingManager : GameSubsystemBase, IPoolService
     {
         private readonly Dictionary<string, IObjectPool> _pools = new();
         private Transform _globalPoolRoot;
